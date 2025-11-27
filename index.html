@@ -906,6 +906,9 @@ async function saveUserQuestions() { // **내 질문 저장**
       savedUserQuestions = JSON.parse(JSON.stringify(userQuestions)); 
       
       alert('내가 설정한 질문이 저장되었습니다.');
+
+        // 🚀 여기 추가 (가장 중요!)
+  await loadUserQuestions();
       
       // 3. 목록 즉시 업데이트
       renderUserQuestions(); // 편집 창 목록 업데이트 <--- 이 부분이 이제 제대로 작동합니다.
