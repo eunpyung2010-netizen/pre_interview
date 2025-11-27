@@ -399,7 +399,7 @@
       <div id="sampleAudioManage">
         <div class="alert alert-info" style="margin-bottom: 1rem;">
           <span>💡</span>
-          <span>연습 음성 파일은 외부 URL로 등록할 수 있습니다. (Google Drive, Dropbox 등의 직접 다운로드 링크 사용)</span>
+          <span>Google Drive: 파일 우클릭 → 공유 → 링크 복사 후, <code>drive.google.com/file/d/파일ID/view</code>에서 파일ID를 복사하여 <code>drive.google.com/uc?export=download&id=파일ID</code> 형식으로 입력하세요.</span>
         </div>
         
         <div style="margin-bottom: 1.5rem;">
@@ -408,8 +408,12 @@
         </div>
         <div style="margin-bottom: 1.5rem;">
           <label>음성 파일 URL</label>
-          <input type="text" id="sampleAudioUrl" placeholder="https://...">
-          <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">※ mp3, wav, webm 등 오디오 파일 직접 링크</p>
+          <input type="text" id="sampleAudioUrl" placeholder="https://drive.google.com/uc?export=download&id=파일ID">
+          <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">※ Google Drive 직접 다운로드 링크 또는 mp3/wav 직접 링크</p>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label>스크립트 (대본)</label>
+          <textarea id="sampleAudioScript" rows="4" placeholder="지원자가 따라 읽을 스크립트를 입력하세요..."></textarea>
         </div>
         <button class="btn btn-primary" onclick="addSampleAudio()">➕ 연습 음성 추가</button>
         
@@ -1251,12 +1255,18 @@ function renderSampleAudios() {
   
   let html = '';
   sampleAudios.forEach((audio, i) => {
-    html += `<div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-      <p style="font-weight: 500; margin-bottom: 0.5rem;">${i + 1}. ${audio.title}</p>
-      <audio controls style="width: 100%;">
+    html += `<div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+      <p style="font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; color: #10B981;">${i + 1}. ${audio.title}</p>
+      <audio controls style="width: 100%; margin-bottom: 1rem;">
         <source src="${audio.url}" type="audio/mpeg">
         브라우저가 오디오를 지원하지 않습니다.
       </audio>
+      ${audio.script ? `
+        <div style="background: rgba(255,255,255,0.05); border-left: 3px solid #10B981; padding: 1rem; border-radius: 0 8px 8px 0;">
+          <p style="font-size: 0.85rem; color: #888; margin-bottom: 0.5rem;">📝 스크립트</p>
+          <p style="line-height: 1.8; color: #e8e8e8; white-space: pre-wrap;">${audio.script}</p>
+        </div>
+      ` : ''}
     </div>`;
   });
   list.innerHTML = html;
@@ -1273,12 +1283,15 @@ function renderAdminSampleAudios() {
   
   let html = '';
   sampleAudios.forEach((audio, i) => {
-    html += `<div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
-      <div style="flex: 1;">
-        <p style="font-weight: 500;">${audio.title}</p>
-        <p style="font-size: 0.8rem; color: #666; word-break: break-all;">${audio.url.substring(0, 50)}...</p>
+    html += `<div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div style="flex: 1;">
+          <p style="font-weight: 500;">${audio.title}</p>
+          <p style="font-size: 0.8rem; color: #666; word-break: break-all;">${audio.url.substring(0, 50)}...</p>
+          ${audio.script ? `<p style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">📝 스크립트: ${audio.script.substring(0, 30)}...</p>` : ''}
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteSampleAudio(${i})">🗑️</button>
       </div>
-      <button class="btn btn-sm btn-danger" onclick="deleteSampleAudio(${i})">🗑️</button>
     </div>`;
   });
   list.innerHTML = html;
