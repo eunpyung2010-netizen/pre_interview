@@ -172,7 +172,6 @@
 </head>
 <body>
 
-<!-- 로그인 화면 -->
 <div id="loginScreen" class="login-container">
   <div class="login-card">
     <h2>🎯 면접 모의연습</h2>
@@ -189,7 +188,6 @@
   </div>
 </div>
 
-<!-- 메인 화면 -->
 <div id="mainScreen" class="container hidden">
   <header>
     <h1>🎯 면접 모의연습 시스템</h1>
@@ -208,10 +206,8 @@
     <button class="tab-btn hidden" id="adminTabBtn" onclick="showTab('admin', event)">👨‍💼 관리자</button>
   </div>
   
-  <!-- 모의연습 탭 -->
   <div id="practice" class="tab-content active">
     <div class="card">
-      <!-- 진행률 표시 -->
       <div class="progress-container">
         <div class="progress-header">
           <span class="progress-title">연습 진행률</span>
@@ -227,13 +223,11 @@
         </div>
       </div>
       
-      <!-- 연습 제한 알림 -->
       <div id="limitAlert" class="alert alert-warning hidden">
         <span>⚠️</span>
         <span>연습 기회 3회를 모두 사용하셨습니다. 결과 탭에서 분석 내용을 확인하세요.</span>
       </div>
       
-      <!-- 녹음 영역 -->
       <div class="recording-area" id="recordingArea">
         <div class="question-display">
           <div class="question-label">질문</div>
@@ -256,9 +250,8 @@
           <button class="record-btn start" id="recordBtn" onclick="toggleRecording()">🎤</button>
         </div>
         <p style="color: #888; margin-top: 1rem;">녹음 버튼을 누르면 1분 타이머가 시작됩니다</p>
-        <p style="color: #F59E0B; font-size: 0.85rem; margin-top: 0.5rem;">⚠️ 녹음 내용이 너무 짧거나 주변 잡음이 녹음될 경우 잘못된 분석이 제시될 수 있습니다.</p>
+        <p style="color: #F59E0B; font-size: 0.85rem; margin-top: 0.5rem;">⚠️ 최적의 결과를 위해, 녹음은 10초 이상으로 하고 소음이 적은 곳에서 진행해주세요. 그렇지 않으면 분석이 부정확해질 수 있습니다.</p>
         
-        <!-- 녹음 완료 후 재생 -->
         <div class="audio-player hidden" id="audioPlayer">
           <p style="margin-bottom: 0.5rem; color: #10B981;">✅ 녹음 완료</p>
           <audio id="audioPlayback" controls></audio>
@@ -269,7 +262,6 @@
         </div>
       </div>
       
-      <!-- 분석 중 표시 -->
       <div class="hidden" id="analyzingArea" style="text-align: center; padding: 3rem;">
         <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
         <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">AI가 답변을 분석하고 있습니다...</p>
@@ -278,7 +270,6 @@
     </div>
   </div>
   
-  <!-- 결과 탭 -->
   <div id="results" class="tab-content">
     <div class="card">
       <h2>📊 연습 이력</h2>
@@ -288,13 +279,11 @@
       </div>
     </div>
     
-    <!-- 이력 비교 -->
     <div class="card hidden" id="comparisonCard">
       <h2>📈 연습 이력 비교</h2>
       <div class="comparison-grid" id="comparisonGrid"></div>
     </div>
     
-    <!-- 상세 결과 -->
     <div class="card hidden" id="resultDetail">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
         <div>
@@ -317,19 +306,19 @@
         </div>
       </div>
       
+      <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>본 AI분석은 음성 변환과 AI 처리에 기반하므로, 부정확할 수 있습니다. 참고 목적으로만 사용하세요.</span>
+      </div>
+      
       <div class="analysis-section">
         <h3>💡 AI 피드백</h3>
         <div class="feedback-box" id="detailFeedback"></div>
       </div>
       
-      <div class="alert alert-info" style="margin-top: 1rem;">
-        <span>ℹ️</span>
-        <span>본 분석은 음성을 텍스트로 변환하여 AI가 분석한 내용입니다. 참고 용도로 사용하세요.</span>
       </div>
-    </div>
   </div>
   
-  <!-- 따라하기 연습 탭 -->
   <div id="sample" class="tab-content">
     <div class="card">
       <h2>🎧 따라하기 연습</h2>
@@ -360,13 +349,22 @@
     </div>
   </div>
   
-  <!-- 설정 탭 (모든 사용자 접근 가능) -->
   <div id="settings" class="tab-content">
     <div class="card">
       <h2>📋 면접 질문 선택</h2>
       <p style="color: #888; margin-bottom: 1.5rem;">연습할 질문을 선택하세요. 선택한 질문이 면접 모의연습에 적용됩니다.</p>
       
       <div id="questionSelectList"></div>
+      
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <h3 style="margin-bottom: 1rem;">👤 내가 설정한 질문 (최대 2개)</h3>
+        <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">직접 면접 질문을 입력하여 연습에 활용할 수 있습니다. (관리자 질문 외 별도)</p>
+        <div id="userQuestionList"></div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button class="btn btn-secondary" onclick="addUserQuestion()" id="addUserQuestionBtn">➕ 내 질문 추가</button>
+          <button class="btn btn-primary" onclick="saveUserQuestions()">💾 내 질문 저장</button>
+        </div>
+      </div>
       
       <div id="adminQuestionSection" class="hidden" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
         <h3 style="margin-bottom: 1rem;">👨‍💼 질문 관리 (관리자 전용)</h3>
@@ -380,7 +378,6 @@
     </div>
   </div>
   
-  <!-- 관리자 탭 -->
   <div id="admin" class="tab-content">
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -405,7 +402,6 @@
       </div>
     </div>
     
-    <!-- 연습 음성 관리 (관리자 전용) -->
     <div class="card">
       <h2>🎧 연습 음성 관리</h2>
       <p style="color: #888; margin-bottom: 1rem;">지원자가 따라할 연습 음성 파일을 등록합니다.</p>
@@ -467,6 +463,7 @@ let isAdmin = false;
 let questions = [
   { id: 1, text: '우리 기관에 지원한 동기를 소개해주세요.' }
 ];
+let userQuestions = []; // **추가: 지원자 본인 질문 목록**
 let selectedQuestionId = 1; // 선택된 질문 ID
 let practices = [];
 let sampleAudios = []; // 연습 음성 목록
@@ -555,6 +552,7 @@ function doLogout() {
   isAdmin = false;
   sessionStorage.removeItem('interviewUser');
   practices = [];
+  userQuestions = []; // **추가: 로그아웃 시 본인 질문 초기화**
   
   // 관리자 탭 숨기기
   document.getElementById('adminTabBtn').classList.add('hidden');
@@ -615,6 +613,7 @@ function showMainScreen() {
   practices = [];
   
   loadQuestions();
+  loadUserQuestions(); // **추가: 지원자 질문 로드**
   loadPractices();
   loadSampleAudios();
 }
@@ -645,6 +644,7 @@ function showTab(tabId, event) {
   }
   if (tabId === 'settings') {
     renderQuestionSelect();
+    renderUserQuestions(); // **추가: 내 질문 렌더링**
     if (isAdmin) {
       document.getElementById('adminQuestionSection').classList.remove('hidden');
       renderQuestions();
@@ -657,7 +657,7 @@ function showTab(tabId, event) {
   }
 }
 
-// ==================== 질문 관리 ====================
+// ==================== 질문 관리 (관리자) ====================
 async function loadQuestions() {
   try {
     const res = await fetch(API_BASE + '/api/practice?action=getQuestions');
@@ -669,6 +669,23 @@ async function loadQuestions() {
     }
   } catch (err) {
     console.error('질문 로드 실패:', err);
+  }
+  
+  // 현재 질문 표시 (selectedQuestionId는 loadUserQuestions에서 최종 결정됨)
+  updateCurrentQuestion();
+}
+
+// ==================== 질문 관리 (지원자) ====================
+async function loadUserQuestions() {
+  if (!currentUser) return;
+  try {
+    const res = await fetch(API_BASE + '/api/practice?action=getUserQuestions&interviewId=' + currentUser.interviewId);
+    if (res.ok) {
+      const data = await res.json();
+      userQuestions = data.userQuestions || [];
+    }
+  } catch (err) {
+    console.error('내 질문 로드 실패:', err);
   }
   
   // 저장된 선택 질문 불러오기 (본인만 적용)
@@ -683,8 +700,21 @@ async function loadQuestions() {
   updateCurrentQuestion();
 }
 
+function getAllQuestions() {
+  // 관리자 질문 (id: 1, 2, 3...) + 내 질문 (id: 1001, 1002...)
+  // 내 질문 id는 1000부터 시작하는 임시 ID를 사용하고, 저장할 때 interviewId를 함께 저장하여 구분
+  const maxAdminId = questions.reduce((max, q) => Math.max(max, q.id), 0);
+  const userQWithId = userQuestions.map((q, i) => ({
+    id: 1000 + i + 1, // 임시 ID 할당
+    text: q.text,
+    isUser: true
+  }));
+  return [...questions, ...userQWithId];
+}
+
 function updateCurrentQuestion() {
-  const selectedQ = questions.find(q => q.id === selectedQuestionId);
+  const allQ = getAllQuestions();
+  const selectedQ = allQ.find(q => q.id === selectedQuestionId);
   if (selectedQ) {
     document.getElementById('questionText').textContent = selectedQ.text;
   } else if (questions.length > 0) {
@@ -697,21 +727,26 @@ function renderQuestionSelect() {
   const list = document.getElementById('questionSelectList');
   if (!list) return;
   
-  if (questions.length === 0) {
+  const allQ = getAllQuestions();
+  
+  if (allQ.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;">📋 설정된 질문이 없습니다.</div>';
     return;
   }
   
   let html = '';
-  questions.forEach((q, i) => {
+  allQ.forEach((q, i) => {
     const isSelected = q.id === selectedQuestionId;
+    const isUser = q.isUser;
+    const qType = isUser ? ' (내 질문)' : ' (기본 질문)';
+    
     html += `<div style="background: ${isSelected ? 'rgba(16,185,129,0.2)' : 'rgba(0,0,0,0.2)'}; border: 2px solid ${isSelected ? '#10B981' : 'transparent'}; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.3s;" onclick="selectQuestion(${q.id})">
       <div style="display: flex; align-items: center; gap: 1rem;">
         <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${isSelected ? '#10B981' : '#666'}; display: flex; align-items: center; justify-content: center;">
           ${isSelected ? '<div style="width: 12px; height: 12px; border-radius: 50%; background: #10B981;"></div>' : ''}
         </div>
         <div style="flex: 1;">
-          <p style="font-weight: 500; color: ${isSelected ? '#10B981' : '#e8e8e8'};">${i + 1}. ${q.text}</p>
+          <p style="font-weight: 500; color: ${isSelected ? '#10B981' : '#e8e8e8'};">${q.text} <span style="font-size:0.8rem; color:#666;">${qType}</span></p>
         </div>
       </div>
     </div>`;
@@ -727,7 +762,7 @@ function selectQuestion(id) {
   renderQuestionSelect();
 }
 
-function renderQuestions() {
+function renderQuestions() { // 관리자 질문 렌더링
   const list = document.getElementById('questionList');
   if (!list) return;
   
@@ -764,14 +799,102 @@ function renderQuestions() {
   }
 }
 
-function addQuestion() {
-  if (questions.length >= 5) {
-    alert('질문은 최대 5개까지 등록 가능합니다.');
+function renderUserQuestions() { // **추가: 지원자 본인 질문 렌더링**
+  const list = document.getElementById('userQuestionList');
+  if (!list) return;
+  
+  if (userQuestions.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:1rem;color:#666;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:1rem;">등록된 질문이 없습니다.</div>';
+  }
+  
+  let html = '';
+  userQuestions.forEach((q, i) => {
+    // 임시 ID (1001, 1002)는 렌더링에만 사용
+    html += `<div class="question-item">
+      <span class="question-num" style="background: rgba(59,130,246,0.5);">${i + 1}</span>
+      <div>
+        <label>질문 내용</label>
+        <textarea rows="2" id="userQ_${i}" onchange="updateUserQuestion(${i}, this.value)">${q.text}</textarea>
+      </div>
+      <button class="delete-btn" onclick="deleteUserQuestion(${i})">🗑️</button>
+    </div>`;
+  });
+  list.innerHTML = html;
+  
+  // 최대 2개 제한
+  const addBtn = document.getElementById('addUserQuestionBtn');
+  if (addBtn) {
+    if (userQuestions.length >= 2) {
+      addBtn.disabled = true;
+      addBtn.style.opacity = '0.5';
+      addBtn.title = '최대 2개까지 등록 가능합니다';
+    } else {
+      addBtn.disabled = false;
+      addBtn.style.opacity = '1';
+      addBtn.title = '';
+    }
+  }
+}
+
+function addUserQuestion() { // **추가: 내 질문 추가**
+  if (userQuestions.length >= 2) {
+    alert('질문은 최대 2개까지 등록 가능합니다.');
     return;
   }
-  const maxId = questions.reduce((max, q) => Math.max(max, q.id), 0);
-  questions.push({ id: maxId + 1, text: '' });
-  renderQuestions();
+  userQuestions.push({ text: '' });
+  renderUserQuestions();
+}
+
+function updateUserQuestion(index, text) { // **추가: 내 질문 수정**
+  if (userQuestions[index]) userQuestions[index].text = text;
+}
+
+function deleteUserQuestion(index) { // **추가: 내 질문 삭제**
+  if (!confirm('이 질문을 삭제하시겠습니까?')) return;
+  
+  const deletedQ = userQuestions[index];
+  const deletedId = 1000 + index + 1;
+  
+  userQuestions.splice(index, 1);
+  renderUserQuestions();
+  
+  // 선택된 질문이 삭제된 질문이라면 기본 질문으로 변경
+  if (selectedQuestionId === deletedId) {
+    selectQuestion(questions[0]?.id || 1);
+  }
+  renderQuestionSelect();
+}
+
+async function saveUserQuestions() { // **추가: 내 질문 저장**
+  // 빈 질문 제거
+  userQuestions = userQuestions.filter(q => q.text.trim() !== '');
+  
+  if (userQuestions.length === 0) {
+    alert('저장할 질문이 없습니다. 질문 내용을 입력해주세요.');
+    return;
+  }
+  
+  try {
+    const res = await fetch(API_BASE + '/api/practice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'saveUserQuestions', 
+        interviewId: currentUser.interviewId,
+        userQuestions: userQuestions 
+      })
+    });
+    
+    if (res.ok) {
+      alert('내가 설정한 질문이 저장되었습니다.');
+      await loadUserQuestions(); // 저장 후 다시 로드하여 최신화
+      renderUserQuestions();
+      renderQuestionSelect();
+    }
+  } catch (err) {
+    alert('저장에 실패했습니다.');
+    console.error(err);
+  }
 }
 
 function updateQuestion(id, text) {
@@ -788,7 +911,7 @@ function deleteQuestion(id) {
   renderQuestions();
 }
 
-async function saveQuestions() {
+async function saveQuestions() { // 관리자 질문 저장
   try {
     const res = await fetch(API_BASE + '/api/practice', {
       method: 'POST',
@@ -1122,7 +1245,8 @@ async function submitRecording() {
     console.log('Transcription successful:', transcript.substring(0, 50) + '...');
     
     // 2. AI 분석 요청 - 선택된 질문 사용
-    const selectedQ = questions.find(q => q.id === selectedQuestionId);
+    const allQ = getAllQuestions();
+    const selectedQ = allQ.find(q => q.id === selectedQuestionId);
     const question = selectedQ?.text || questions[0]?.text || '우리 기관에 지원한 동기를 소개해주세요.';
     
     const analyzeRes = await fetch(API_BASE + '/api/analyze', {
@@ -1388,6 +1512,7 @@ function renderAdminSampleAudios() {
 async function addSampleAudio() {
   const title = document.getElementById('sampleAudioTitle').value.trim();
   const url = document.getElementById('sampleAudioUrl').value.trim();
+  const script = document.getElementById('sampleAudioScript').value.trim(); // **스크립트 추가**
   
   if (!title || !url) {
     alert('제목과 URL을 모두 입력해주세요.');
@@ -1395,19 +1520,21 @@ async function addSampleAudio() {
   }
   
   try {
+    const newAudio = { title, url, script };
     const res = await fetch(API_BASE + '/api/practice', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'saveSampleAudios',
-        sampleAudios: [...sampleAudios, { title, url }]
+        sampleAudios: [...sampleAudios, newAudio]
       })
     });
     
     if (res.ok) {
-      sampleAudios.push({ title, url });
+      sampleAudios.push(newAudio);
       document.getElementById('sampleAudioTitle').value = '';
       document.getElementById('sampleAudioUrl').value = '';
+      document.getElementById('sampleAudioScript').value = ''; // **스크립트 초기화**
       renderAdminSampleAudios();
       alert('연습 음성이 추가되었습니다.');
     }
@@ -1550,6 +1677,7 @@ async function downloadPDF() {
     .box { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0; }
     .feedback { background: #e8f5e9; border-left: 4px solid #10B981; padding: 15px; }
     .date { color: #888; font-size: 14px; }
+    .alert-info { background: #d0e7ff; border: 1px solid #93c5fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #3b82f6; }
   </style>
 </head>
 <body>
@@ -1562,6 +1690,10 @@ async function downloadPDF() {
   
   <h2>🎤 나의 답변</h2>
   <div class="box">${transcript}</div>
+  
+  <div class="alert-info">
+    ℹ️ 본 AI분석은 음성 변환과 AI 처리에 기반하므로, 부정확할 수 있습니다. 참고 목적으로만 사용하세요.
+  </div>
   
   <h2>💡 AI 피드백</h2>
   <div class="feedback">${feedback.replace(/\n/g, '<br>')}</div>
