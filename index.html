@@ -570,15 +570,21 @@ function showMainScreen() {
   document.getElementById('mainScreen').classList.remove('hidden');
   document.getElementById('userBadge').textContent = '면접번호: ' + currentUser.interviewId;
   
-  // 관리자 메뉴 표시
+  // 관리자 메뉴 표시/숨김
   if (currentUser.isAdmin) {
     document.getElementById('adminTabBtn').classList.remove('hidden');
     isAdmin = true;
+  } else {
+    document.getElementById('adminTabBtn').classList.add('hidden');
+    isAdmin = false;
   }
+  
+  // 기존 데이터 초기화 후 새로 로드
+  practices = [];
   
   loadQuestions();
   loadPractices();
-  loadSampleAudios(); // 연습 음성 로드
+  loadSampleAudios();
 }
 
 // ==================== 탭 전환 ====================
