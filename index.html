@@ -874,85 +874,49 @@ function handleUserQuestionChange(id, newText) {
 
 // ==================== 기존 saveUserQuestions 함수 (재확인용) ====================
 
-async function saveUserQuestions() { // **내 질문 저장**
-  // 1. 확인 팝업 추가
-  if (!confirm('현재 질문 목록을 저장하고 면접 연습 질문으로 설정하시겠습니까?')) {
-      return;
-  }
+async function saveUserQuestions() {
+  if (!confirm('현재 질문 목록을 저장하고 면접 연습 질문으로 설정하시겠습니까?')) return;
 
-  // 빈 질문 제거
+  // 빈 입력 제거
   userQuestions = userQuestions.filter(q => q.text.trim() !== '');
-  
+
   if (userQuestions.length === 0) {
     alert('저장할 질문이 없습니다. 질문 내용을 입력해주세요.');
-    // 빈 질문 제거 후 목록을 다시 렌더링
-    renderUserQuestions(); 
+    renderUserQuestions();
     return;
   }
-  
+
   try {
     const res = await fetch(API_BASE + '/api/practice', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: 'saveUserQuestions', 
+      body: JSON.stringify({
+        action: 'saveUserQuestions',
         interviewId: currentUser.interviewId,
-        userQuestions: userQuestions 
+        userQuestions
       })
     });
-    
+
     if (res.ok) {
-      // 2. 서버 저장 성공 시, savedUserQuestions를 현재 편집 내용으로 업데이트
-      savedUserQuestions = JSON.parse(JSON.stringify(userQuestions)); 
-      
       alert('내가 설정한 질문이 저장되었습니다.');
 
-        // 🚀 여기 추가 (가장 중요!)
-  await loadUserQuestions();
-      
-      // 3. 목록 즉시 업데이트
-      renderUserQuestions(); // 편집 창 목록 업데이트 <--- 이 부분이 이제 제대로 작동합니다.
-      renderQuestionSelect(); // 면접 질문 선택 목록 업데이트
-      updateCurrentQuestion(); // 현재 선택된 질문 텍스트 업데이트
-    }
-  } catch (err) {
-    alert('저장에 실패했습니다.');
-    console.error(err);
-  }
-}
+      // ⭐ 서버에서 다시 최신값 반환 & 상태 동기화
+      await loadUserQuestions();
 
-function updateQuestion(id, text) {
-  const q = questions.find(q => q.id === id);
-  if (q) q.text = text;
-}
-
-function deleteQuestion(id) {
-  if (questions.length <= 1) {
-    alert('최소 1개의 질문은 있어야 합니다.');
-    return;
-  }
-  questions = questions.filter(q => q.id !== id);
-  renderQuestions();
-}
-
-async function saveQuestions() { // 관리자 질문 저장
-  try {
-    const res = await fetch(API_BASE + '/api/practice', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveQuestions', questions })
-    });
-    
-    if (res.ok) {
-      alert('기본 질문이 저장되었습니다. 모든 지원자에게 적용됩니다.');
-      updateCurrentQuestion();
+      // UI 즉시 반영
+      renderUserQuestions();
       renderQuestionSelect();
+      updateCurrentQuestion();
+    } else {
+      alert('저장에 실패했습니다.');
     }
+
   } catch (err) {
-    alert('저장에 실패했습니다.');
+    alert('서버 연결 오류가 발생했습니다.');
     console.error(err);
   }
 }
+
 
 // ==================== 연습 기록 관리 ====================
 async function loadPractices() {
