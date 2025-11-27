@@ -1300,6 +1300,7 @@ function renderAdminSampleAudios() {
 async function addSampleAudio() {
   const title = document.getElementById('sampleAudioTitle').value.trim();
   const url = document.getElementById('sampleAudioUrl').value.trim();
+  const script = document.getElementById('sampleAudioScript').value.trim();
   
   if (!title || !url) {
     alert('제목과 URL을 모두 입력해주세요.');
@@ -1312,14 +1313,15 @@ async function addSampleAudio() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'saveSampleAudios',
-        sampleAudios: [...sampleAudios, { title, url }]
+        sampleAudios: [...sampleAudios, { title, url, script }]
       })
     });
     
     if (res.ok) {
-      sampleAudios.push({ title, url });
+      sampleAudios.push({ title, url, script });
       document.getElementById('sampleAudioTitle').value = '';
       document.getElementById('sampleAudioUrl').value = '';
+      document.getElementById('sampleAudioScript').value = '';
       renderAdminSampleAudios();
       alert('연습 음성이 추가되었습니다.');
     }
