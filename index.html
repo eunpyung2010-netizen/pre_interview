@@ -204,7 +204,7 @@
     <button class="tab-btn active" onclick="showTab('practice')">🎤 면접 모의연습</button>
     <button class="tab-btn" onclick="showTab('results')">📊 연습 결과</button>
     <button class="tab-btn" onclick="showTab('sample')">🎧 따라하기 연습</button>
-    <button class="tab-btn hidden" id="settingsTabBtn" onclick="showTab('settings')">⚙️ 설정</button>
+    <button class="tab-btn" id="settingsTabBtn" onclick="showTab('settings')">⚙️ 설정</button>
     <button class="tab-btn hidden" id="adminTabBtn" onclick="showTab('admin')">👨‍💼 관리자</button>
   </div>
   
@@ -326,13 +326,13 @@
   <!-- 따라하기 연습 탭 -->
   <div id="sample" class="tab-content">
     <div class="card">
-      <h2>🎧 모범 음성 따라하기</h2>
-      <p style="color: #888; margin-bottom: 1.5rem;">모범 음성을 듣고 따라 말해보세요. 분석 없이 자유롭게 연습할 수 있습니다.</p>
+      <h2>🎧 따라하기 연습</h2>
+      <p style="color: #888; margin-bottom: 1.5rem;">연습 음성을 듣고 따라 말해보세요. 분석 없이 자유롭게 연습할 수 있습니다.</p>
       
       <div class="sample-audio-section">
-        <h3>📢 모범 음성</h3>
+        <h3>📢 연습 음성</h3>
         <div id="sampleAudioList">
-          <p style="color: #888; text-align: center; padding: 2rem;">등록된 모범 음성이 없습니다.</p>
+          <p style="color: #888; text-align: center; padding: 2rem;">등록된 연습 음성이 없습니다.</p>
         </div>
       </div>
       
@@ -354,7 +354,7 @@
     </div>
   </div>
   
-  <!-- 설정 탭 (관리자용) -->
+  <!-- 설정 탭 (모든 사용자 접근 가능) -->
   <div id="settings" class="tab-content">
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -363,14 +363,6 @@
       </div>
       <div id="questionList"></div>
       <button class="btn btn-primary" style="margin-top: 1rem;" onclick="saveQuestions()">💾 설정 저장</button>
-    </div>
-    
-    <div class="card">
-      <h2>🎧 모범 음성 관리</h2>
-      <p style="color: #888; margin-bottom: 1rem;">지원자가 따라할 모범 음성 파일을 등록합니다.</p>
-      <div id="sampleAudioManage">
-        <p style="color: #666;">※ 모범 음성 파일 업로드는 준비 중입니다.</p>
-      </div>
     </div>
   </div>
   
@@ -396,6 +388,37 @@
             <tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">로딩 중...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+    
+    <!-- 연습 음성 관리 (관리자 전용) -->
+    <div class="card">
+      <h2>🎧 연습 음성 관리</h2>
+      <p style="color: #888; margin-bottom: 1rem;">지원자가 따라할 연습 음성 파일을 등록합니다.</p>
+      
+      <div id="sampleAudioManage">
+        <div class="alert alert-info" style="margin-bottom: 1rem;">
+          <span>💡</span>
+          <span>연습 음성 파일은 외부 URL로 등록할 수 있습니다. (Google Drive, Dropbox 등의 직접 다운로드 링크 사용)</span>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+          <label>음성 제목</label>
+          <input type="text" id="sampleAudioTitle" placeholder="예: 지원동기 모범답변">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label>음성 파일 URL</label>
+          <input type="text" id="sampleAudioUrl" placeholder="https://...">
+          <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">※ mp3, wav, webm 등 오디오 파일 직접 링크</p>
+        </div>
+        <button class="btn btn-primary" onclick="addSampleAudio()">➕ 연습 음성 추가</button>
+        
+        <div style="margin-top: 2rem;">
+          <h3 style="font-size: 1rem; margin-bottom: 1rem;">📂 등록된 연습 음성</h3>
+          <div id="adminSampleAudioList">
+            <p style="color: #666; text-align: center; padding: 1rem;">등록된 연습 음성이 없습니다.</p>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -427,6 +450,7 @@ let questions = [
   { id: 1, text: '우리 기관에 지원한 동기를 소개해주세요.' }
 ];
 let practices = [];
+let sampleAudios = []; // 연습 음성 목록
 let mediaRecorder = null;
 let audioChunks = [];
 let audioBlob = null;
@@ -527,13 +551,13 @@ function showMainScreen() {
   
   // 관리자 메뉴 표시
   if (currentUser.isAdmin) {
-    document.getElementById('settingsTabBtn').classList.remove('hidden');
     document.getElementById('adminTabBtn').classList.remove('hidden');
     isAdmin = true;
   }
   
   loadQuestions();
   loadPractices();
+  loadSampleAudios(); // 연습 음성 로드
 }
 
 // ==================== 탭 전환 ====================
@@ -546,9 +570,13 @@ function showTab(tabId) {
   
   if (tabId === 'admin' && isAdmin) {
     loadAdminData();
+    renderAdminSampleAudios();
   }
-  if (tabId === 'settings' && isAdmin) {
+  if (tabId === 'settings') {
     renderQuestions();
+  }
+  if (tabId === 'sample') {
+    renderSampleAudios();
   }
 }
 
@@ -740,15 +768,8 @@ function viewResult(index) {
   document.getElementById('detailTranscript').textContent = p.transcript || '(텍스트 변환 결과 없음)';
   document.getElementById('detailFeedback').innerHTML = p.feedback ? p.feedback.replace(/\n/g, '<br>') : '(피드백 없음)';
   
-  // 오디오 재생
-  const audioPlayer = document.getElementById('detailAudioPlayer');
-  const audioEl = document.getElementById('detailAudio');
-  if (p.audioData) {
-    audioEl.src = p.audioData;
-    audioPlayer.classList.remove('hidden');
-  } else {
-    audioPlayer.classList.add('hidden');
-  }
+  // 오디오 재생 (저장하지 않으므로 항상 숨김)
+  document.getElementById('detailAudioPlayer').classList.add('hidden');
   
   document.getElementById('resultDetail').classList.remove('hidden');
   
@@ -935,17 +956,27 @@ async function submitRecording() {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
     
+    console.log('Sending audio for transcription...', audioBlob.size, 'bytes');
+    
     const transcribeRes = await fetch(API_BASE + '/api/transcribe', {
       method: 'POST',
       body: formData
     });
     
+    const transcribeData = await transcribeRes.json();
+    
     if (!transcribeRes.ok) {
-      throw new Error('음성 변환에 실패했습니다.');
+      console.error('Transcribe error:', transcribeData);
+      throw new Error(transcribeData.error || '음성 변환에 실패했습니다.');
     }
     
-    const transcribeData = await transcribeRes.json();
     const transcript = transcribeData.text;
+    
+    if (!transcript || transcript.trim() === '') {
+      throw new Error('음성이 인식되지 않았습니다. 다시 녹음해주세요.');
+    }
+    
+    console.log('Transcription successful:', transcript.substring(0, 50) + '...');
     
     // 2. AI 분석 요청
     const question = questions[0]?.text || '우리 기관에 지원한 동기를 소개해주세요.';
@@ -979,16 +1010,13 @@ ${transcript}
     const analyzeData = await analyzeRes.json();
     const feedback = analyzeData.content;
     
-    // 3. 오디오를 Base64로 변환
-    const audioData = await blobToBase64(audioBlob);
-    
-    // 4. 결과 저장
+    // 3. 결과 저장 (음성 파일은 저장하지 않음 - 개인정보 보호)
     const practice = {
       attempt: practices.length + 1,
       question: question,
       transcript: transcript,
       feedback: feedback,
-      audioData: audioData,
+      // audioData 제거 - 지원자 음성 파일 저장 안 함
       timestamp: new Date().toISOString()
     };
     
@@ -1144,6 +1172,117 @@ function resetSampleRecording() {
   document.getElementById('samplePlayerResult').classList.add('hidden');
   document.getElementById('sampleWaveformOverlay').classList.remove('hidden');
   sampleAudioChunks = [];
+}
+
+// ==================== 연습 음성 관리 ====================
+async function loadSampleAudios() {
+  try {
+    const res = await fetch(API_BASE + '/api/practice?action=getSampleAudios');
+    if (res.ok) {
+      const data = await res.json();
+      sampleAudios = data.sampleAudios || [];
+    }
+  } catch (err) {
+    console.error('연습 음성 로드 실패:', err);
+  }
+  renderSampleAudios();
+}
+
+function renderSampleAudios() {
+  const list = document.getElementById('sampleAudioList');
+  if (!list) return;
+  
+  if (sampleAudios.length === 0) {
+    list.innerHTML = '<p style="color: #888; text-align: center; padding: 2rem;">등록된 연습 음성이 없습니다.</p>';
+    return;
+  }
+  
+  let html = '';
+  sampleAudios.forEach((audio, i) => {
+    html += `<div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+      <p style="font-weight: 500; margin-bottom: 0.5rem;">${i + 1}. ${audio.title}</p>
+      <audio controls style="width: 100%;">
+        <source src="${audio.url}" type="audio/mpeg">
+        브라우저가 오디오를 지원하지 않습니다.
+      </audio>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function renderAdminSampleAudios() {
+  const list = document.getElementById('adminSampleAudioList');
+  if (!list) return;
+  
+  if (sampleAudios.length === 0) {
+    list.innerHTML = '<p style="color: #666; text-align: center; padding: 1rem;">등록된 연습 음성이 없습니다.</p>';
+    return;
+  }
+  
+  let html = '';
+  sampleAudios.forEach((audio, i) => {
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
+      <div style="flex: 1;">
+        <p style="font-weight: 500;">${audio.title}</p>
+        <p style="font-size: 0.8rem; color: #666; word-break: break-all;">${audio.url.substring(0, 50)}...</p>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteSampleAudio(${i})">🗑️</button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+async function addSampleAudio() {
+  const title = document.getElementById('sampleAudioTitle').value.trim();
+  const url = document.getElementById('sampleAudioUrl').value.trim();
+  
+  if (!title || !url) {
+    alert('제목과 URL을 모두 입력해주세요.');
+    return;
+  }
+  
+  try {
+    const res = await fetch(API_BASE + '/api/practice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'saveSampleAudios',
+        sampleAudios: [...sampleAudios, { title, url }]
+      })
+    });
+    
+    if (res.ok) {
+      sampleAudios.push({ title, url });
+      document.getElementById('sampleAudioTitle').value = '';
+      document.getElementById('sampleAudioUrl').value = '';
+      renderAdminSampleAudios();
+      alert('연습 음성이 추가되었습니다.');
+    }
+  } catch (err) {
+    alert('저장에 실패했습니다.');
+    console.error(err);
+  }
+}
+
+async function deleteSampleAudio(index) {
+  if (!confirm('이 연습 음성을 삭제하시겠습니까?')) return;
+  
+  sampleAudios.splice(index, 1);
+  
+  try {
+    await fetch(API_BASE + '/api/practice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'saveSampleAudios',
+        sampleAudios: sampleAudios
+      })
+    });
+    renderAdminSampleAudios();
+  } catch (err) {
+    alert('삭제에 실패했습니다.');
+    console.error(err);
+  }
 }
 
 // ==================== 관리자 기능 ====================
