@@ -25,6 +25,14 @@ export default async function handler(req, res) {
         });
       }
 
+      // 연습 음성 목록 조회
+      if (action === 'getSampleAudios') {
+        const sampleAudios = await kv.get('sampleAudios');
+        return res.status(200).json({
+          sampleAudios: sampleAudios || []
+        });
+      }
+
       // 개인 연습 기록 조회
       if (action === 'getPractices' && interviewId) {
         const practices = await kv.get(`practices:${interviewId}`);
@@ -46,11 +54,17 @@ export default async function handler(req, res) {
 
     // POST 요청 처리
     if (req.method === 'POST') {
-      const { action, interviewId, practice, questions } = req.body;
+      const { action, interviewId, practice, questions, sampleAudios } = req.body;
 
       // 질문 저장 (관리자)
       if (action === 'saveQuestions' && questions) {
         await kv.set('questions', questions);
+        return res.status(200).json({ success: true });
+      }
+
+      // 연습 음성 저장 (관리자)
+      if (action === 'saveSampleAudios' && sampleAudios !== undefined) {
+        await kv.set('sampleAudios', sampleAudios);
         return res.status(200).json({ success: true });
       }
 
