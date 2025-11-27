@@ -204,7 +204,7 @@
     <button class="tab-btn active" onclick="showTab('practice', event)">🎤 면접 모의연습</button>
     <button class="tab-btn" onclick="showTab('results', event)">📊 연습 결과</button>
     <button class="tab-btn" onclick="showTab('sample', event)">🎧 따라하기 연습</button>
-    <button class="tab-btn" id="settingsTabBtn" onclick="showTab('settings', event)">⚙️ 설정</button>
+    <button class="tab-btn" id="settingsTabBtn" onclick="showTab('settings', event)">📝 질문 바꾸기</button>
     <button class="tab-btn hidden" id="adminTabBtn" onclick="showTab('admin', event)">👨‍💼 관리자</button>
   </div>
   
@@ -256,6 +256,7 @@
           <button class="record-btn start" id="recordBtn" onclick="toggleRecording()">🎤</button>
         </div>
         <p style="color: #888; margin-top: 1rem;">녹음 버튼을 누르면 1분 타이머가 시작됩니다</p>
+        <p style="color: #F59E0B; font-size: 0.85rem; margin-top: 0.5rem;">⚠️ 녹음 내용이 너무 짧거나 주변 잡음이 녹음될 경우 잘못된 분석이 제시될 수 있습니다.</p>
         
         <!-- 녹음 완료 후 재생 -->
         <div class="audio-player hidden" id="audioPlayer">
@@ -320,6 +321,11 @@
         <h3>💡 AI 피드백</h3>
         <div class="feedback-box" id="detailFeedback"></div>
       </div>
+      
+      <div class="alert alert-info" style="margin-top: 1rem;">
+        <span>ℹ️</span>
+        <span>본 분석은 음성을 텍스트로 변환하여 AI가 분석한 내용입니다. 참고 용도로 사용하세요.</span>
+      </div>
     </div>
   </div>
   
@@ -357,12 +363,20 @@
   <!-- 설정 탭 (모든 사용자 접근 가능) -->
   <div id="settings" class="tab-content">
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2>📋 모의질문 설정</h2>
-        <button class="btn btn-primary" onclick="addQuestion()">➕ 질문 추가</button>
+      <h2>📋 면접 질문 선택</h2>
+      <p style="color: #888; margin-bottom: 1.5rem;">연습할 질문을 선택하세요. 선택한 질문이 면접 모의연습에 적용됩니다.</p>
+      
+      <div id="questionSelectList"></div>
+      
+      <div id="adminQuestionSection" class="hidden" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <h3 style="margin-bottom: 1rem;">👨‍💼 질문 관리 (관리자 전용)</h3>
+        <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">여기서 수정한 질문은 모든 지원자의 기본 질문으로 적용됩니다. (최대 5개)</p>
+        <div id="questionList"></div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button class="btn btn-secondary" onclick="addQuestion()" id="addQuestionBtn">➕ 질문 추가</button>
+          <button class="btn btn-primary" onclick="saveQuestions()">💾 기본 질문 저장</button>
+        </div>
       </div>
-      <div id="questionList"></div>
-      <button class="btn btn-primary" style="margin-top: 1rem;" onclick="saveQuestions()">💾 설정 저장</button>
     </div>
   </div>
   
@@ -453,6 +467,7 @@ let isAdmin = false;
 let questions = [
   { id: 1, text: '우리 기관에 지원한 동기를 소개해주세요.' }
 ];
+let selectedQuestionId = 1; // 선택된 질문 ID
 let practices = [];
 let sampleAudios = []; // 연습 음성 목록
 let mediaRecorder = null;
@@ -617,7 +632,7 @@ function showTab(tabId, event) {
       if (btn.textContent.includes(tabId === 'practice' ? '면접' : 
           tabId === 'results' ? '결과' : 
           tabId === 'sample' ? '따라하기' : 
-          tabId === 'settings' ? '설정' : '관리자')) {
+          tabId === 'settings' ? '질문' : '관리자')) {
         btn.classList.add('active');
       }
     });
@@ -629,7 +644,13 @@ function showTab(tabId, event) {
     renderAdminSampleAudios();
   }
   if (tabId === 'settings') {
-    renderQuestions();
+    renderQuestionSelect();
+    if (isAdmin) {
+      document.getElementById('adminQuestionSection').classList.remove('hidden');
+      renderQuestions();
+    } else {
+      document.getElementById('adminQuestionSection').classList.add('hidden');
+    }
   }
   if (tabId === 'sample') {
     renderSampleAudios();
@@ -650,14 +671,60 @@ async function loadQuestions() {
     console.error('질문 로드 실패:', err);
   }
   
-  // 현재 질문 표시
-  if (questions.length > 0) {
-    document.getElementById('questionText').textContent = questions[0].text;
+  // 저장된 선택 질문 불러오기 (본인만 적용)
+  const savedSelection = sessionStorage.getItem('selectedQuestion_' + currentUser?.interviewId);
+  if (savedSelection) {
+    selectedQuestionId = parseInt(savedSelection);
+  } else {
+    selectedQuestionId = questions[0]?.id || 1;
   }
   
-  if (isAdmin) {
-    renderQuestions();
+  // 현재 질문 표시
+  updateCurrentQuestion();
+}
+
+function updateCurrentQuestion() {
+  const selectedQ = questions.find(q => q.id === selectedQuestionId);
+  if (selectedQ) {
+    document.getElementById('questionText').textContent = selectedQ.text;
+  } else if (questions.length > 0) {
+    selectedQuestionId = questions[0].id;
+    document.getElementById('questionText').textContent = questions[0].text;
   }
+}
+
+function renderQuestionSelect() {
+  const list = document.getElementById('questionSelectList');
+  if (!list) return;
+  
+  if (questions.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;">📋 설정된 질문이 없습니다.</div>';
+    return;
+  }
+  
+  let html = '';
+  questions.forEach((q, i) => {
+    const isSelected = q.id === selectedQuestionId;
+    html += `<div style="background: ${isSelected ? 'rgba(16,185,129,0.2)' : 'rgba(0,0,0,0.2)'}; border: 2px solid ${isSelected ? '#10B981' : 'transparent'}; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.3s;" onclick="selectQuestion(${q.id})">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${isSelected ? '#10B981' : '#666'}; display: flex; align-items: center; justify-content: center;">
+          ${isSelected ? '<div style="width: 12px; height: 12px; border-radius: 50%; background: #10B981;"></div>' : ''}
+        </div>
+        <div style="flex: 1;">
+          <p style="font-weight: 500; color: ${isSelected ? '#10B981' : '#e8e8e8'};">${i + 1}. ${q.text}</p>
+        </div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function selectQuestion(id) {
+  selectedQuestionId = id;
+  // 본인만 적용되도록 sessionStorage에 저장
+  sessionStorage.setItem('selectedQuestion_' + currentUser.interviewId, id);
+  updateCurrentQuestion();
+  renderQuestionSelect();
 }
 
 function renderQuestions() {
@@ -681,9 +748,27 @@ function renderQuestions() {
     </div>`;
   });
   list.innerHTML = html;
+  
+  // 최대 5개 제한
+  const addBtn = document.getElementById('addQuestionBtn');
+  if (addBtn) {
+    if (questions.length >= 5) {
+      addBtn.disabled = true;
+      addBtn.style.opacity = '0.5';
+      addBtn.title = '최대 5개까지 등록 가능합니다';
+    } else {
+      addBtn.disabled = false;
+      addBtn.style.opacity = '1';
+      addBtn.title = '';
+    }
+  }
 }
 
 function addQuestion() {
+  if (questions.length >= 5) {
+    alert('질문은 최대 5개까지 등록 가능합니다.');
+    return;
+  }
   const maxId = questions.reduce((max, q) => Math.max(max, q.id), 0);
   questions.push({ id: maxId + 1, text: '' });
   renderQuestions();
@@ -695,6 +780,10 @@ function updateQuestion(id, text) {
 }
 
 function deleteQuestion(id) {
+  if (questions.length <= 1) {
+    alert('최소 1개의 질문은 있어야 합니다.');
+    return;
+  }
   questions = questions.filter(q => q.id !== id);
   renderQuestions();
 }
@@ -708,11 +797,9 @@ async function saveQuestions() {
     });
     
     if (res.ok) {
-      alert('질문이 저장되었습니다.');
-      // 현재 질문 업데이트
-      if (questions.length > 0) {
-        document.getElementById('questionText').textContent = questions[0].text;
-      }
+      alert('기본 질문이 저장되었습니다. 모든 지원자에게 적용됩니다.');
+      updateCurrentQuestion();
+      renderQuestionSelect();
     }
   } catch (err) {
     alert('저장에 실패했습니다.');
@@ -1034,8 +1121,9 @@ async function submitRecording() {
     
     console.log('Transcription successful:', transcript.substring(0, 50) + '...');
     
-    // 2. AI 분석 요청
-    const question = questions[0]?.text || '우리 기관에 지원한 동기를 소개해주세요.';
+    // 2. AI 분석 요청 - 선택된 질문 사용
+    const selectedQ = questions.find(q => q.id === selectedQuestionId);
+    const question = selectedQ?.text || questions[0]?.text || '우리 기관에 지원한 동기를 소개해주세요.';
     
     const analyzeRes = await fetch(API_BASE + '/api/analyze', {
       method: 'POST',
