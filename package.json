@@ -1,0 +1,19 @@
+{
+  "name": "interview-practice",
+  "version": "1.0.0",
+  "description": "면접 모의연습 시스템",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build required'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/kv": "^1.0.1",
+    "formidable": "^3.5.1",
+    "form-data": "^4.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

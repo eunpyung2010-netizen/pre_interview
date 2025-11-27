@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>면접 모의연습 시스템</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: #e8e8e8; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    
+    /* 헤더 */
+    header { text-align: center; padding: 2rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; }
+    header h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #10B981, #34D399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+    header p { color: #888; }
+    .user-info { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; }
+    .user-badge { background: rgba(16,185,129,0.2); color: #10B981; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; }
+    .logout-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #888; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; }
+    .logout-btn:hover { border-color: #EF4444; color: #EF4444; }
+    
+    /* 로그인 화면 */
+    .login-container { max-width: 400px; margin: 100px auto; }
+    .login-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2.5rem; }
+    .login-card h2 { text-align: center; margin-bottom: 2rem; color: #10B981; }
+    .login-card .input-group { margin-bottom: 1.5rem; }
+    .login-card label { display: block; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem; }
+    .login-card input { width: 100%; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #e8e8e8; font-size: 1rem; }
+    .login-card input:focus { outline: none; border-color: #10B981; }
+    .login-btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, #10B981, #059669); border: none; border-radius: 12px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .login-error { color: #EF4444; text-align: center; margin-top: 1rem; font-size: 0.9rem; }
+    
+    /* 탭 */
+    .tabs { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+    .tab-btn { padding: 0.75rem 1.5rem; background: transparent; border: none; color: #888; cursor: pointer; font-size: 1rem; font-weight: 500; border-bottom: 3px solid transparent; transition: all 0.3s; }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.active { color: #10B981; border-bottom-color: #10B981; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* 카드 */
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+    
+    /* 입력 요소 */
+    input, textarea, select { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.75rem 1rem; color: #e8e8e8; font-size: 0.95rem; width: 100%; font-family: inherit; }
+    input:focus, textarea:focus { outline: none; border-color: #10B981; }
+    label { display: block; margin-bottom: 0.35rem; color: #888; font-size: 0.85rem; }
+    
+    /* 버튼 */
+    .btn { padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 500; cursor: pointer; border: none; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+    .btn-primary { background: linear-gradient(135deg, #10B981, #059669); color: white; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; }
+    .btn-danger { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; }
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.85rem; }
+    
+    /* 진행률 */
+    .progress-container { margin-bottom: 2rem; }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .progress-title { font-size: 1.1rem; font-weight: 600; }
+    .progress-count { color: #10B981; font-weight: 600; }
+    .progress-bar { height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(135deg, #10B981, #34D399); border-radius: 6px; transition: width 0.5s ease; }
+    .progress-labels { display: flex; justify-content: space-between; margin-top: 0.5rem; }
+    .progress-label { font-size: 0.8rem; color: #666; }
+    .progress-label.active { color: #10B981; font-weight: 600; }
+    .progress-label.completed { color: #34D399; }
+    
+    /* 질문 설정 */
+    .question-item { display: grid; grid-template-columns: 40px 1fr 40px; gap: 1rem; align-items: start; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 1rem; }
+    .question-num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #10B981, #34D399); display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .delete-btn { background: transparent; border: none; color: #666; cursor: pointer; padding: 0.5rem; }
+    .delete-btn:hover { color: #EF4444; }
+    
+    /* 녹음 영역 */
+    .recording-area { text-align: center; padding: 3rem 2rem; }
+    .question-display { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+    .question-label { color: #10B981; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .question-text { font-size: 1.3rem; font-weight: 500; line-height: 1.6; }
+    
+    /* 타이머 */
+    .timer-display { font-size: 4rem; font-weight: 700; font-family: 'Courier New', monospace; margin: 1.5rem 0; }
+    .timer-display.warning { color: #F59E0B; }
+    .timer-display.danger { color: #EF4444; animation: pulse 0.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    /* 파형 시각화 */
+    .waveform-container { height: 100px; background: rgba(0,0,0,0.3); border-radius: 12px; margin: 1.5rem 0; overflow: hidden; position: relative; }
+    .waveform-canvas { width: 100%; height: 100%; }
+    .waveform-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 0.9rem; }
+    
+    /* 녹음 버튼 */
+    .record-btn { width: 120px; height: 120px; border-radius: 50%; border: none; cursor: pointer; font-size: 3rem; transition: all 0.3s; margin: 1rem; }
+    .record-btn.start { background: linear-gradient(135deg, #10B981, #059669); color: white; }
+    .record-btn.start:hover { transform: scale(1.1); box-shadow: 0 8px 30px rgba(16,185,129,0.5); }
+    .record-btn.stop { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; animation: recording-pulse 1.5s infinite; }
+    @keyframes recording-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 20px rgba(239,68,68,0); } }
+    .record-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    
+    /* 녹음 상태 표시 */
+    .recording-status { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 1rem 0; font-size: 1.1rem; }
+    .recording-dot { width: 12px; height: 12px; background: #EF4444; border-radius: 50%; animation: blink 1s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    
+    /* 오디오 플레이어 */
+    .audio-player { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+    .audio-player audio { width: 100%; }
+    
+    /* 결과 카드 */
+    .result-card { padding: 1.25rem; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 1rem; border: 2px solid transparent; transition: all 0.3s; cursor: pointer; }
+    .result-card:hover { background: rgba(0,0,0,0.3); }
+    .result-card.selected { border-color: #10B981; }
+    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .result-attempt { background: rgba(16,185,129,0.2); color: #10B981; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .result-date { color: #666; font-size: 0.85rem; }
+    .result-question { color: #aaa; font-size: 0.9rem; margin-top: 0.5rem; }
+    
+    /* 분석 결과 */
+    .analysis-section { margin-bottom: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 12px; }
+    .analysis-section h3 { font-size: 1.1rem; color: #10B981; margin-bottom: 1rem; }
+    .transcript-box { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 1rem; line-height: 1.8; color: #ccc; }
+    .feedback-box { background: rgba(16,185,129,0.1); border-left: 4px solid #10B981; padding: 1rem; border-radius: 0 8px 8px 0; line-height: 1.8; }
+    
+    /* 알림 */
+    .alert { padding: 1rem; border-radius: 12px; margin-bottom: 1rem; display: flex; align-items: start; gap: 0.75rem; }
+    .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #EF4444; }
+    .alert-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #10B981; }
+    .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #F59E0B; }
+    .alert-info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #93C5FD; }
+    
+    /* 모범 음성 따라하기 */
+    .sample-audio-section { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .sample-audio-section h3 { color: #A78BFA; margin-bottom: 1rem; }
+    
+    /* 테이블 (관리자) */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 1rem; text-align: left; }
+    th { background: rgba(0,0,0,0.3); color: #aaa; font-size: 0.9rem; }
+    tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    
+    /* 상태 뱃지 */
+    .status-badge { padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+    .status-not-started { background: rgba(107,114,128,0.2); color: #9CA3AF; }
+    .status-in-progress { background: rgba(245,158,11,0.2); color: #F59E0B; }
+    .status-completed { background: rgba(16,185,129,0.2); color: #10B981; }
+    
+    /* 숨김 */
+    .hidden { display: none !important; }
+    
+    /* 이력 비교 */
+    .comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+    .comparison-card { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.25rem; }
+    .comparison-card h4 { color: #10B981; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .comparison-card .attempt-num { background: rgba(16,185,129,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; }
+    
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      header h1 { font-size: 1.5rem; }
+      .tabs { flex-wrap: wrap; }
+      .tab-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
+      .timer-display { font-size: 3rem; }
+      .record-btn { width: 100px; height: 100px; font-size: 2.5rem; }
+      .question-item { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div id="loginScreen" class="login-container">
+  <div class="login-card">
+    <h2>🎯 면접 모의연습</h2>
+    <div class="input-group">
+      <label>면접번호</label>
+      <input type="text" id="loginId" placeholder="예: A001" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <label>비밀번호 (4자리)</label>
+      <input type="password" id="loginPw" placeholder="••••" maxlength="4" autocomplete="off">
+    </div>
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div id="loginError" class="login-error hidden"></div>
+  </div>
+</div>
+
+<!-- 메인 화면 -->
+<div id="mainScreen" class="container hidden">
+  <header>
+    <h1>🎯 면접 모의연습 시스템</h1>
+    <p>질문 듣기 → 답변 녹음 → AI 피드백 받기</p>
+    <div class="user-info">
+      <span class="user-badge" id="userBadge">면접번호: -</span>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </header>
+  
+  <div class="tabs" id="mainTabs">
+    <button class="tab-btn active" onclick="showTab('practice')">🎤 면접 모의연습</button>
+    <button class="tab-btn" onclick="showTab('results')">📊 연습 결과</button>
+    <button class="tab-btn" onclick="showTab('sample')">🎧 따라하기 연습</button>
+    <button class="tab-btn hidden" id="settingsTabBtn" onclick="showTab('settings')">⚙️ 설정</button>
+    <button class="tab-btn hidden" id="adminTabBtn" onclick="showTab('admin')">👨‍💼 관리자</button>
+  </div>
+  
+  <!-- 모의연습 탭 -->
+  <div id="practice" class="tab-content active">
+    <div class="card">
+      <!-- 진행률 표시 -->
+      <div class="progress-container">
+        <div class="progress-header">
+          <span class="progress-title">연습 진행률</span>
+          <span class="progress-count" id="progressCount">0 / 3 회</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-labels">
+          <span class="progress-label" id="prog1">1회차</span>
+          <span class="progress-label" id="prog2">2회차</span>
+          <span class="progress-label" id="prog3">3회차</span>
+        </div>
+      </div>
+      
+      <!-- 연습 제한 알림 -->
+      <div id="limitAlert" class="alert alert-warning hidden">
+        <span>⚠️</span>
+        <span>연습 기회 3회를 모두 사용하셨습니다. 결과 탭에서 분석 내용을 확인하세요.</span>
+      </div>
+      
+      <!-- 녹음 영역 -->
+      <div class="recording-area" id="recordingArea">
+        <div class="question-display">
+          <div class="question-label">질문</div>
+          <div class="question-text" id="questionText">우리 기관에 지원한 동기를 소개해주세요.</div>
+        </div>
+        
+        <div class="timer-display" id="timerDisplay">01:00</div>
+        
+        <div class="waveform-container">
+          <canvas class="waveform-canvas" id="waveformCanvas"></canvas>
+          <div class="waveform-overlay" id="waveformOverlay">🎤 녹음 버튼을 눌러 시작하세요</div>
+        </div>
+        
+        <div class="recording-status hidden" id="recordingStatus">
+          <span class="recording-dot"></span>
+          <span>녹음 중...</span>
+        </div>
+        
+        <div>
+          <button class="record-btn start" id="recordBtn" onclick="toggleRecording()">🎤</button>
+        </div>
+        <p style="color: #888; margin-top: 1rem;">녹음 버튼을 누르면 1분 타이머가 시작됩니다</p>
+        
+        <!-- 녹음 완료 후 재생 -->
+        <div class="audio-player hidden" id="audioPlayer">
+          <p style="margin-bottom: 0.5rem; color: #10B981;">✅ 녹음 완료</p>
+          <audio id="audioPlayback" controls></audio>
+          <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
+            <button class="btn btn-secondary" onclick="resetRecording()">🔄 다시 녹음</button>
+            <button class="btn btn-primary" onclick="submitRecording()" id="submitBtn">📤 분석 요청</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 분석 중 표시 -->
+      <div class="hidden" id="analyzingArea" style="text-align: center; padding: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
+        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">AI가 답변을 분석하고 있습니다...</p>
+        <p style="color: #888;">잠시만 기다려주세요 (약 10~20초)</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 결과 탭 -->
+  <div id="results" class="tab-content">
+    <div class="card">
+      <h2>📊 연습 이력</h2>
+      <div id="resultsList"></div>
+      <div id="noResults" style="text-align: center; padding: 3rem; color: #666;">
+        📝 아직 연습 기록이 없습니다. 먼저 모의연습을 진행해주세요.
+      </div>
+    </div>
+    
+    <!-- 이력 비교 -->
+    <div class="card hidden" id="comparisonCard">
+      <h2>📈 연습 이력 비교</h2>
+      <div class="comparison-grid" id="comparisonGrid"></div>
+    </div>
+    
+    <!-- 상세 결과 -->
+    <div class="card hidden" id="resultDetail">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h2 id="detailTitle">분석 결과</h2>
+          <p id="detailDate" style="color: #888;"></p>
+        </div>
+        <button class="btn btn-primary" onclick="downloadPDF()">📥 PDF 다운로드</button>
+      </div>
+      
+      <div class="analysis-section">
+        <h3>📋 질문</h3>
+        <div class="transcript-box" id="detailQuestion"></div>
+      </div>
+      
+      <div class="analysis-section">
+        <h3>🎤 나의 답변 (음성→텍스트)</h3>
+        <div class="transcript-box" id="detailTranscript"></div>
+        <div class="audio-player" id="detailAudioPlayer" style="margin-top: 1rem;">
+          <audio id="detailAudio" controls style="width: 100%;"></audio>
+        </div>
+      </div>
+      
+      <div class="analysis-section">
+        <h3>💡 AI 피드백</h3>
+        <div class="feedback-box" id="detailFeedback"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 따라하기 연습 탭 -->
+  <div id="sample" class="tab-content">
+    <div class="card">
+      <h2>🎧 모범 음성 따라하기</h2>
+      <p style="color: #888; margin-bottom: 1.5rem;">모범 음성을 듣고 따라 말해보세요. 분석 없이 자유롭게 연습할 수 있습니다.</p>
+      
+      <div class="sample-audio-section">
+        <h3>📢 모범 음성</h3>
+        <div id="sampleAudioList">
+          <p style="color: #888; text-align: center; padding: 2rem;">등록된 모범 음성이 없습니다.</p>
+        </div>
+      </div>
+      
+      <div class="card" style="background: rgba(16,185,129,0.05);">
+        <h3 style="color: #10B981; margin-bottom: 1rem;">🎤 따라하기 녹음</h3>
+        <div class="waveform-container">
+          <canvas class="waveform-canvas" id="sampleWaveform"></canvas>
+          <div class="waveform-overlay" id="sampleWaveformOverlay">🎤 녹음 버튼을 누르세요</div>
+        </div>
+        <div style="text-align: center; margin-top: 1rem;">
+          <button class="record-btn start" id="sampleRecordBtn" onclick="toggleSampleRecording()">🎤</button>
+        </div>
+        <div class="audio-player hidden" id="samplePlayerResult">
+          <p style="margin-bottom: 0.5rem; color: #10B981;">✅ 녹음 완료 - 재생해서 확인해보세요</p>
+          <audio id="sampleAudioPlayback" controls style="width: 100%;"></audio>
+          <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="resetSampleRecording()">🔄 다시 녹음</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 설정 탭 (관리자용) -->
+  <div id="settings" class="tab-content">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>📋 모의질문 설정</h2>
+        <button class="btn btn-primary" onclick="addQuestion()">➕ 질문 추가</button>
+      </div>
+      <div id="questionList"></div>
+      <button class="btn btn-primary" style="margin-top: 1rem;" onclick="saveQuestions()">💾 설정 저장</button>
+    </div>
+    
+    <div class="card">
+      <h2>🎧 모범 음성 관리</h2>
+      <p style="color: #888; margin-bottom: 1rem;">지원자가 따라할 모범 음성 파일을 등록합니다.</p>
+      <div id="sampleAudioManage">
+        <p style="color: #666;">※ 모범 음성 파일 업로드는 준비 중입니다.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 관리자 탭 -->
+  <div id="admin" class="tab-content">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>👨‍💼 지원자 현황</h2>
+        <button class="btn btn-secondary" onclick="refreshAdmin()">🔄 새로고침</button>
+      </div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>면접번호</th>
+              <th>연습 횟수</th>
+              <th>상태</th>
+              <th>마지막 연습</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="adminTable">
+            <tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>📊 통계</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div style="background: rgba(16,185,129,0.1); padding: 1.5rem; border-radius: 12px; text-align: center;">
+          <div style="font-size: 2.5rem; font-weight: 700; color: #10B981;" id="statTotal">0</div>
+          <div style="color: #888;">전체 지원자</div>
+        </div>
+        <div style="background: rgba(245,158,11,0.1); padding: 1.5rem; border-radius: 12px; text-align: center;">
+          <div style="font-size: 2.5rem; font-weight: 700; color: #F59E0B;" id="statInProgress">0</div>
+          <div style="color: #888;">진행 중</div>
+        </div>
+        <div style="background: rgba(59,130,246,0.1); padding: 1.5rem; border-radius: 12px; text-align: center;">
+          <div style="font-size: 2.5rem; font-weight: 700; color: #3B82F6;" id="statCompleted">0</div>
+          <div style="color: #888;">완료 (3회)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 상태 관리 ====================
+let currentUser = null;
+let isAdmin = false;
+let questions = [
+  { id: 1, text: '우리 기관에 지원한 동기를 소개해주세요.' }
+];
+let practices = [];
+let mediaRecorder = null;
+let audioChunks = [];
+let audioBlob = null;
+let audioUrl = null;
+let isRecording = false;
+let timerInterval = null;
+let timeLeft = 60;
+let audioContext = null;
+let analyser = null;
+let animationId = null;
+
+// 따라하기 연습용
+let sampleMediaRecorder = null;
+let sampleAudioChunks = [];
+let sampleIsRecording = false;
+let sampleAudioContext = null;
+let sampleAnalyser = null;
+let sampleAnimationId = null;
+
+// API 베이스 URL (개발/프로덕션 자동 감지)
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
+
+// ==================== 초기화 ====================
+document.addEventListener('DOMContentLoaded', function() {
+  // 저장된 세션 확인
+  const savedUser = sessionStorage.getItem('interviewUser');
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    showMainScreen();
+  }
+  
+  // 엔터키 로그인
+  document.getElementById('loginPw').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('loginId').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') document.getElementById('loginPw').focus();
+  });
+});
+
+// ==================== 로그인 ====================
+async function doLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value.trim();
+  const errorEl = document.getElementById('loginError');
+  
+  if (!id || !pw) {
+    errorEl.textContent = '면접번호와 비밀번호를 입력해주세요.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  
+  try {
+    const res = await fetch(API_BASE + '/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interviewId: id, password: pw })
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      errorEl.textContent = data.error || '로그인에 실패했습니다.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    
+    currentUser = { interviewId: id, isAdmin: data.isAdmin };
+    isAdmin = data.isAdmin;
+    sessionStorage.setItem('interviewUser', JSON.stringify(currentUser));
+    
+    showMainScreen();
+    
+  } catch (err) {
+    errorEl.textContent = '서버 연결에 실패했습니다.';
+    errorEl.classList.remove('hidden');
+    console.error(err);
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  isAdmin = false;
+  sessionStorage.removeItem('interviewUser');
+  practices = [];
+  
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainScreen').classList.add('hidden');
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPw').value = '';
+  document.getElementById('loginError').classList.add('hidden');
+}
+
+function showMainScreen() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainScreen').classList.remove('hidden');
+  document.getElementById('userBadge').textContent = '면접번호: ' + currentUser.interviewId;
+  
+  // 관리자 메뉴 표시
+  if (currentUser.isAdmin) {
+    document.getElementById('settingsTabBtn').classList.remove('hidden');
+    document.getElementById('adminTabBtn').classList.remove('hidden');
+    isAdmin = true;
+  }
+  
+  loadQuestions();
+  loadPractices();
+}
+
+// ==================== 탭 전환 ====================
+function showTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  
+  if (tabId === 'admin' && isAdmin) {
+    loadAdminData();
+  }
+  if (tabId === 'settings' && isAdmin) {
+    renderQuestions();
+  }
+}
+
+// ==================== 질문 관리 ====================
+async function loadQuestions() {
+  try {
+    const res = await fetch(API_BASE + '/api/practice?action=getQuestions');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.questions && data.questions.length > 0) {
+        questions = data.questions;
+      }
+    }
+  } catch (err) {
+    console.error('질문 로드 실패:', err);
+  }
+  
+  // 현재 질문 표시
+  if (questions.length > 0) {
+    document.getElementById('questionText').textContent = questions[0].text;
+  }
+  
+  if (isAdmin) {
+    renderQuestions();
+  }
+}
+
+function renderQuestions() {
+  const list = document.getElementById('questionList');
+  if (!list) return;
+  
+  if (questions.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;">📋 설정된 질문이 없습니다.</div>';
+    return;
+  }
+  
+  let html = '';
+  questions.forEach((q, i) => {
+    html += `<div class="question-item">
+      <span class="question-num">${i + 1}</span>
+      <div>
+        <label>질문 내용</label>
+        <textarea rows="2" onchange="updateQuestion(${q.id}, this.value)">${q.text}</textarea>
+      </div>
+      <button class="delete-btn" onclick="deleteQuestion(${q.id})">🗑️</button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function addQuestion() {
+  const maxId = questions.reduce((max, q) => Math.max(max, q.id), 0);
+  questions.push({ id: maxId + 1, text: '' });
+  renderQuestions();
+}
+
+function updateQuestion(id, text) {
+  const q = questions.find(q => q.id === id);
+  if (q) q.text = text;
+}
+
+function deleteQuestion(id) {
+  questions = questions.filter(q => q.id !== id);
+  renderQuestions();
+}
+
+async function saveQuestions() {
+  try {
+    const res = await fetch(API_BASE + '/api/practice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saveQuestions', questions })
+    });
+    
+    if (res.ok) {
+      alert('질문이 저장되었습니다.');
+      // 현재 질문 업데이트
+      if (questions.length > 0) {
+        document.getElementById('questionText').textContent = questions[0].text;
+      }
+    }
+  } catch (err) {
+    alert('저장에 실패했습니다.');
+    console.error(err);
+  }
+}
+
+// ==================== 연습 기록 관리 ====================
+async function loadPractices() {
+  if (!currentUser) return;
+  
+  try {
+    const res = await fetch(API_BASE + '/api/practice?action=getPractices&interviewId=' + currentUser.interviewId);
+    if (res.ok) {
+      const data = await res.json();
+      practices = data.practices || [];
+    }
+  } catch (err) {
+    console.error('연습 기록 로드 실패:', err);
+  }
+  
+  updateProgress();
+  renderResults();
+}
+
+function updateProgress() {
+  const count = practices.length;
+  document.getElementById('progressCount').textContent = count + ' / 3 회';
+  document.getElementById('progressFill').style.width = (count / 3 * 100) + '%';
+  
+  // 진행 라벨 업데이트
+  for (let i = 1; i <= 3; i++) {
+    const label = document.getElementById('prog' + i);
+    if (i <= count) {
+      label.classList.add('completed');
+      label.classList.remove('active');
+    } else if (i === count + 1) {
+      label.classList.add('active');
+      label.classList.remove('completed');
+    } else {
+      label.classList.remove('active', 'completed');
+    }
+  }
+  
+  // 3회 완료 시 제한
+  if (count >= 3) {
+    document.getElementById('limitAlert').classList.remove('hidden');
+    document.getElementById('recordBtn').disabled = true;
+  } else {
+    document.getElementById('limitAlert').classList.add('hidden');
+    document.getElementById('recordBtn').disabled = false;
+  }
+}
+
+function renderResults() {
+  const list = document.getElementById('resultsList');
+  const noResults = document.getElementById('noResults');
+  
+  if (practices.length === 0) {
+    list.innerHTML = '';
+    noResults.classList.remove('hidden');
+    document.getElementById('comparisonCard').classList.add('hidden');
+    return;
+  }
+  
+  noResults.classList.add('hidden');
+  
+  let html = '';
+  practices.forEach((p, i) => {
+    html += `<div class="result-card" onclick="viewResult(${i})">
+      <div class="result-header">
+        <span class="result-attempt">${i + 1}회차</span>
+        <span class="result-date">${formatDate(p.timestamp)}</span>
+      </div>
+      <div class="result-question">${truncate(p.question, 50)}</div>
+    </div>`;
+  });
+  list.innerHTML = html;
+  
+  // 이력 비교 표시 (2개 이상일 때)
+  if (practices.length >= 2) {
+    renderComparison();
+    document.getElementById('comparisonCard').classList.remove('hidden');
+  }
+}
+
+function renderComparison() {
+  const grid = document.getElementById('comparisonGrid');
+  let html = '';
+  
+  practices.forEach((p, i) => {
+    html += `<div class="comparison-card">
+      <h4><span class="attempt-num">${i + 1}</span> ${i + 1}회차 요약</h4>
+      <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem;">${formatDate(p.timestamp)}</p>
+      <p style="color: #ccc; line-height: 1.6;">${truncate(p.feedback, 150)}</p>
+    </div>`;
+  });
+  
+  grid.innerHTML = html;
+}
+
+function viewResult(index) {
+  const p = practices[index];
+  if (!p) return;
+  
+  document.getElementById('detailTitle').textContent = (index + 1) + '회차 분석 결과';
+  document.getElementById('detailDate').textContent = formatDate(p.timestamp);
+  document.getElementById('detailQuestion').textContent = p.question;
+  document.getElementById('detailTranscript').textContent = p.transcript || '(텍스트 변환 결과 없음)';
+  document.getElementById('detailFeedback').innerHTML = p.feedback ? p.feedback.replace(/\n/g, '<br>') : '(피드백 없음)';
+  
+  // 오디오 재생
+  const audioPlayer = document.getElementById('detailAudioPlayer');
+  const audioEl = document.getElementById('detailAudio');
+  if (p.audioData) {
+    audioEl.src = p.audioData;
+    audioPlayer.classList.remove('hidden');
+  } else {
+    audioPlayer.classList.add('hidden');
+  }
+  
+  document.getElementById('resultDetail').classList.remove('hidden');
+  
+  // 선택 표시
+  document.querySelectorAll('.result-card').forEach((c, i) => {
+    c.classList.toggle('selected', i === index);
+  });
+}
+
+// ==================== 녹음 기능 ====================
+async function toggleRecording() {
+  if (practices.length >= 3) {
+    alert('연습 기회 3회를 모두 사용하셨습니다.');
+    return;
+  }
+  
+  if (!isRecording) {
+    await startRecording();
+  } else {
+    stopRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = (e) => {
+      audioChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = () => {
+      audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      audioUrl = URL.createObjectURL(audioBlob);
+      document.getElementById('audioPlayback').src = audioUrl;
+      document.getElementById('audioPlayer').classList.remove('hidden');
+      
+      // 녹음 종료 시 스트림 정리
+      stream.getTracks().forEach(track => track.stop());
+    };
+    
+    mediaRecorder.start();
+    isRecording = true;
+    
+    // UI 업데이트
+    const btn = document.getElementById('recordBtn');
+    btn.classList.remove('start');
+    btn.classList.add('stop');
+    btn.textContent = '⏹';
+    document.getElementById('recordingStatus').classList.remove('hidden');
+    document.getElementById('waveformOverlay').classList.add('hidden');
+    
+    // 타이머 시작
+    timeLeft = 60;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        stopRecording();
+      }
+    }, 1000);
+    
+    // 파형 시각화 시작
+    startWaveform(stream);
+    
+  } catch (err) {
+    alert('마이크 권한이 필요합니다.');
+    console.error(err);
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  
+  isRecording = false;
+  clearInterval(timerInterval);
+  stopWaveform();
+  
+  // UI 업데이트
+  const btn = document.getElementById('recordBtn');
+  btn.classList.remove('stop');
+  btn.classList.add('start');
+  btn.textContent = '🎤';
+  btn.disabled = true;
+  document.getElementById('recordingStatus').classList.add('hidden');
+}
+
+function resetRecording() {
+  audioBlob = null;
+  audioUrl = null;
+  audioChunks = [];
+  
+  document.getElementById('audioPlayer').classList.add('hidden');
+  document.getElementById('recordBtn').disabled = (practices.length >= 3);
+  document.getElementById('waveformOverlay').classList.remove('hidden');
+  timeLeft = 60;
+  updateTimerDisplay();
+  document.getElementById('timerDisplay').classList.remove('warning', 'danger');
+}
+
+function updateTimerDisplay() {
+  const display = document.getElementById('timerDisplay');
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  display.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  
+  display.classList.remove('warning', 'danger');
+  if (timeLeft <= 10) {
+    display.classList.add('danger');
+  } else if (timeLeft <= 20) {
+    display.classList.add('warning');
+  }
+}
+
+// 파형 시각화
+function startWaveform(stream) {
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioContext.createAnalyser();
+  const source = audioContext.createMediaStreamSource(stream);
+  source.connect(analyser);
+  
+  analyser.fftSize = 256;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  const canvas = document.getElementById('waveformCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  
+  function draw() {
+    animationId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const barWidth = (canvas.width / bufferLength) * 2.5;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = (dataArray[i] / 255) * canvas.height;
+      
+      const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+      gradient.addColorStop(0, '#10B981');
+      gradient.addColorStop(1, '#34D399');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+      
+      x += barWidth + 1;
+    }
+  }
+  
+  draw();
+}
+
+function stopWaveform() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+  if (audioContext) {
+    audioContext.close();
+    audioContext = null;
+  }
+}
+
+// ==================== 분석 요청 ====================
+async function submitRecording() {
+  if (!audioBlob) return;
+  
+  document.getElementById('recordingArea').classList.add('hidden');
+  document.getElementById('analyzingArea').classList.remove('hidden');
+  
+  try {
+    // 1. 음성 → 텍스트 변환
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
+    
+    const transcribeRes = await fetch(API_BASE + '/api/transcribe', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!transcribeRes.ok) {
+      throw new Error('음성 변환에 실패했습니다.');
+    }
+    
+    const transcribeData = await transcribeRes.json();
+    const transcript = transcribeData.text;
+    
+    // 2. AI 분석 요청
+    const question = questions[0]?.text || '우리 기관에 지원한 동기를 소개해주세요.';
+    
+    const analyzeRes = await fetch(API_BASE + '/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `당신은 면접 코치입니다. 아래 질문에 대한 지원자의 답변을 분석하고 피드백을 제공해주세요.
+
+[질문]
+${question}
+
+[지원자 답변]
+${transcript}
+
+다음 형식으로 피드백을 작성해주세요:
+1. 답변의 적절성 (질문에 맞는 답변인지)
+2. 강점 (잘한 부분)
+3. 개선점 (보완할 부분)
+4. 구체적인 개선 제안
+
+친절하고 건설적인 톤으로 작성해주세요.`
+      })
+    });
+    
+    if (!analyzeRes.ok) {
+      throw new Error('AI 분석에 실패했습니다.');
+    }
+    
+    const analyzeData = await analyzeRes.json();
+    const feedback = analyzeData.content;
+    
+    // 3. 오디오를 Base64로 변환
+    const audioData = await blobToBase64(audioBlob);
+    
+    // 4. 결과 저장
+    const practice = {
+      attempt: practices.length + 1,
+      question: question,
+      transcript: transcript,
+      feedback: feedback,
+      audioData: audioData,
+      timestamp: new Date().toISOString()
+    };
+    
+    const saveRes = await fetch(API_BASE + '/api/practice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'savePractice',
+        interviewId: currentUser.interviewId,
+        practice: practice
+      })
+    });
+    
+    if (!saveRes.ok) {
+      throw new Error('결과 저장에 실패했습니다.');
+    }
+    
+    practices.push(practice);
+    
+    // UI 업데이트
+    document.getElementById('analyzingArea').classList.add('hidden');
+    document.getElementById('recordingArea').classList.remove('hidden');
+    
+    resetRecording();
+    updateProgress();
+    renderResults();
+    
+    // 결과 탭으로 이동
+    showTab('results');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    
+    viewResult(practices.length - 1);
+    
+  } catch (err) {
+    alert(err.message);
+    console.error(err);
+    document.getElementById('analyzingArea').classList.add('hidden');
+    document.getElementById('recordingArea').classList.remove('hidden');
+  }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ==================== 따라하기 녹음 ====================
+async function toggleSampleRecording() {
+  if (!sampleIsRecording) {
+    await startSampleRecording();
+  } else {
+    stopSampleRecording();
+  }
+}
+
+async function startSampleRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    sampleMediaRecorder = new MediaRecorder(stream);
+    sampleAudioChunks = [];
+    
+    sampleMediaRecorder.ondataavailable = (e) => {
+      sampleAudioChunks.push(e.data);
+    };
+    
+    sampleMediaRecorder.onstop = () => {
+      const blob = new Blob(sampleAudioChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      document.getElementById('sampleAudioPlayback').src = url;
+      document.getElementById('samplePlayerResult').classList.remove('hidden');
+      stream.getTracks().forEach(track => track.stop());
+    };
+    
+    sampleMediaRecorder.start();
+    sampleIsRecording = true;
+    
+    const btn = document.getElementById('sampleRecordBtn');
+    btn.classList.remove('start');
+    btn.classList.add('stop');
+    btn.textContent = '⏹';
+    document.getElementById('sampleWaveformOverlay').classList.add('hidden');
+    
+    // 파형 시각화
+    sampleAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    sampleAnalyser = sampleAudioContext.createAnalyser();
+    const source = sampleAudioContext.createMediaStreamSource(stream);
+    source.connect(sampleAnalyser);
+    
+    sampleAnalyser.fftSize = 256;
+    const bufferLength = sampleAnalyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    const canvas = document.getElementById('sampleWaveform');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    
+    function draw() {
+      sampleAnimationId = requestAnimationFrame(draw);
+      sampleAnalyser.getByteFrequencyData(dataArray);
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+      
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * canvas.height;
+        const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+        gradient.addColorStop(0, '#10B981');
+        gradient.addColorStop(1, '#34D399');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
+      }
+    }
+    draw();
+    
+  } catch (err) {
+    alert('마이크 권한이 필요합니다.');
+    console.error(err);
+  }
+}
+
+function stopSampleRecording() {
+  if (sampleMediaRecorder && sampleMediaRecorder.state !== 'inactive') {
+    sampleMediaRecorder.stop();
+  }
+  
+  sampleIsRecording = false;
+  
+  if (sampleAnimationId) {
+    cancelAnimationFrame(sampleAnimationId);
+  }
+  if (sampleAudioContext) {
+    sampleAudioContext.close();
+  }
+  
+  const btn = document.getElementById('sampleRecordBtn');
+  btn.classList.remove('stop');
+  btn.classList.add('start');
+  btn.textContent = '🎤';
+}
+
+function resetSampleRecording() {
+  document.getElementById('samplePlayerResult').classList.add('hidden');
+  document.getElementById('sampleWaveformOverlay').classList.remove('hidden');
+  sampleAudioChunks = [];
+}
+
+// ==================== 관리자 기능 ====================
+async function loadAdminData() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getAll', adminId: currentUser.interviewId })
+    });
+    
+    if (!res.ok) {
+      throw new Error('관리자 데이터 로드 실패');
+    }
+    
+    const data = await res.json();
+    renderAdminTable(data.candidates);
+    updateStats(data.candidates);
+    
+  } catch (err) {
+    console.error(err);
+    document.getElementById('adminTable').innerHTML = 
+      '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #EF4444;">데이터를 불러올 수 없습니다.</td></tr>';
+  }
+}
+
+function renderAdminTable(candidates) {
+  const tbody = document.getElementById('adminTable');
+  
+  if (!candidates || candidates.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">등록된 지원자가 없습니다.</td></tr>';
+    return;
+  }
+  
+  let html = '';
+  candidates.forEach(c => {
+    const statusClass = c.count === 0 ? 'not-started' : (c.count >= 3 ? 'completed' : 'in-progress');
+    const statusText = c.count === 0 ? '미시작' : (c.count >= 3 ? '완료' : '진행 중');
+    
+    html += `<tr>
+      <td><strong>${c.interviewId}</strong></td>
+      <td>${c.count} / 3 회</td>
+      <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+      <td>${c.lastPractice ? formatDate(c.lastPractice) : '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="viewCandidateDetail('${c.interviewId}')">상세</button>
+        ${c.count > 0 ? `<button class="btn btn-sm btn-danger" onclick="resetCandidate('${c.interviewId}')">초기화</button>` : ''}
+      </td>
+    </tr>`;
+  });
+  
+  tbody.innerHTML = html;
+}
+
+function updateStats(candidates) {
+  const total = candidates.length;
+  const inProgress = candidates.filter(c => c.count > 0 && c.count < 3).length;
+  const completed = candidates.filter(c => c.count >= 3).length;
+  
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statInProgress').textContent = inProgress;
+  document.getElementById('statCompleted').textContent = completed;
+}
+
+async function resetCandidate(interviewId) {
+  if (!confirm(`${interviewId}님의 연습 기록을 초기화하시겠습니까?`)) return;
+  
+  try {
+    const res = await fetch(API_BASE + '/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset', interviewId: interviewId, adminId: currentUser.interviewId })
+    });
+    
+    if (res.ok) {
+      alert('초기화되었습니다.');
+      loadAdminData();
+    }
+  } catch (err) {
+    alert('초기화에 실패했습니다.');
+    console.error(err);
+  }
+}
+
+function viewCandidateDetail(interviewId) {
+  alert('상세 보기 기능은 준비 중입니다.');
+}
+
+function refreshAdmin() {
+  loadAdminData();
+}
+
+// ==================== PDF 다운로드 ====================
+async function downloadPDF() {
+  const title = document.getElementById('detailTitle').textContent;
+  const date = document.getElementById('detailDate').textContent;
+  const question = document.getElementById('detailQuestion').textContent;
+  const transcript = document.getElementById('detailTranscript').textContent;
+  const feedback = document.getElementById('detailFeedback').innerText;
+  
+  // HTML로 리포트 생성
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>면접 모의연습 결과</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; padding: 40px; line-height: 1.8; }
+    h1 { color: #10B981; border-bottom: 2px solid #10B981; padding-bottom: 10px; }
+    h2 { color: #333; margin-top: 30px; }
+    .box { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0; }
+    .feedback { background: #e8f5e9; border-left: 4px solid #10B981; padding: 15px; }
+    .date { color: #888; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>🎯 면접 모의연습 결과</h1>
+  <p class="date">${date}</p>
+  <p><strong>면접번호:</strong> ${currentUser.interviewId}</p>
+  
+  <h2>📋 질문</h2>
+  <div class="box">${question}</div>
+  
+  <h2>🎤 나의 답변</h2>
+  <div class="box">${transcript}</div>
+  
+  <h2>💡 AI 피드백</h2>
+  <div class="feedback">${feedback.replace(/\n/g, '<br>')}</div>
+  
+  <p style="margin-top: 40px; color: #888; font-size: 12px;">
+    ※ 본 분석은 AI가 작성한 참고 자료입니다.
+  </p>
+</body>
+</html>`;
+  
+  // Blob으로 변환하여 다운로드
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `면접연습_${currentUser.interviewId}_${title}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ==================== 유틸리티 ====================
+function formatDate(isoString) {
+  if (!isoString) return '-';
+  const d = new Date(isoString);
+  return d.toLocaleDateString('ko-KR') + ' ' + d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function truncate(str, len) {
+  if (!str) return '';
+  return str.length > len ? str.substring(0, len) + '...' : str;
+}
+</script>
+</body>
+</html>
