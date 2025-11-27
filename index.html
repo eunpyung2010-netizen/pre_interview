@@ -201,11 +201,11 @@
   </header>
   
   <div class="tabs" id="mainTabs">
-    <button class="tab-btn active" onclick="showTab('practice')">🎤 면접 모의연습</button>
-    <button class="tab-btn" onclick="showTab('results')">📊 연습 결과</button>
-    <button class="tab-btn" onclick="showTab('sample')">🎧 따라하기 연습</button>
-    <button class="tab-btn" id="settingsTabBtn" onclick="showTab('settings')">⚙️ 설정</button>
-    <button class="tab-btn hidden" id="adminTabBtn" onclick="showTab('admin')">👨‍💼 관리자</button>
+    <button class="tab-btn active" onclick="showTab('practice', event)">🎤 면접 모의연습</button>
+    <button class="tab-btn" onclick="showTab('results', event)">📊 연습 결과</button>
+    <button class="tab-btn" onclick="showTab('sample', event)">🎧 따라하기 연습</button>
+    <button class="tab-btn" id="settingsTabBtn" onclick="showTab('settings', event)">⚙️ 설정</button>
+    <button class="tab-btn hidden" id="adminTabBtn" onclick="showTab('admin', event)">👨‍💼 관리자</button>
   </div>
   
   <!-- 모의연습 탭 -->
@@ -601,11 +601,23 @@ function showMainScreen() {
 }
 
 // ==================== 탭 전환 ====================
-function showTab(tabId) {
+function showTab(tabId, event) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   
-  event.target.classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  } else {
+    // 버튼 직접 찾아서 활성화
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      if (btn.textContent.includes(tabId === 'practice' ? '면접' : 
+          tabId === 'results' ? '결과' : 
+          tabId === 'sample' ? '따라하기' : 
+          tabId === 'settings' ? '설정' : '관리자')) {
+        btn.classList.add('active');
+      }
+    });
+  }
   document.getElementById(tabId).classList.add('active');
   
   if (tabId === 'admin' && isAdmin) {
