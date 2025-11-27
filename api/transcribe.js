@@ -1,6 +1,5 @@
 const { IncomingForm } = require('formidable');
 const fs = require('fs');
-const FormData = require('form-data');
 
 module.exports.config = {
   api: {
@@ -46,24 +45,25 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: '오디오 파일이 필요합니다.' });
     }
 
+    // 파일 읽기
+    const fileBuffer = fs.readFileSync(audioFile.filepath);
+    
+    // FormData를 Web API 방식으로 생성
     const formData = new FormData();
-    formData.append('file', fs.createReadStream(audioFile.filepath), {
-      filename: audioFile.originalFilename || 'recording.webm',
-      contentType: audioFile.mimetype || 'audio/webm',
-    });
+    const blob = new Blob([fileBuffer], { type: 'audio/webm' });
+    formData.append('file', blob, 'recording.webm');
     formData.append('model', 'whisper-1');
     formData.append('language', 'ko');
-    formData.append('response_format', 'json');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        ...formData.getHeaders(),
       },
       body: formData,
     });
 
+    // 임시 파일 삭제
     fs.unlink(audioFile.filepath, () => {});
 
     if (!response.ok) {
