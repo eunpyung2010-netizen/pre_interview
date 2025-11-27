@@ -463,7 +463,8 @@ let isAdmin = false;
 let questions = [
   { id: 1, text: '우리 기관에 지원한 동기를 소개해주세요.' }
 ];
-let userQuestions = []; // **추가: 지원자 본인 질문 목록**
+let savedUserQuestions = []; // <--- 서버에 저장된 최종 질문 목록 (추가)
+let userQuestions = []; // <--- 현재 '질문 바꾸기' 탭에서 편집 중인 임시 목록으로 역할 변경
 let selectedQuestionId = 1; // 선택된 질문 ID
 let practices = [];
 let sampleAudios = []; // 연습 음성 목록
@@ -643,6 +644,8 @@ function showTab(tabId, event) {
     renderAdminSampleAudios();
   }
   if (tabId === 'settings') {
+    // **수정된 부분: settings 탭 진입 시, 편집용 userQuestions를 서버 저장본으로 딥 카피하여 초기화**
+    userQuestions = JSON.parse(JSON.stringify(savedUserQuestions)); // <--- ⭐ 이 줄이 추가되어야 합니다.
     renderQuestionSelect();
     renderUserQuestions(); // **추가: 내 질문 렌더링**
     
@@ -683,7 +686,8 @@ async function loadUserQuestions() {
     const res = await fetch(API_BASE + '/api/practice?action=getUserQuestions&interviewId=' + currentUser.interviewId);
     if (res.ok) {
       const data = await res.json();
-      userQuestions = data.userQuestions || [];
+      savedUserQuestions = data.userQuestions || []; // <--- 수정: 저장된 질문 목록에 반영
+      // userQuestions는 showTab에서 초기화됩니다.
     }
   } catch (err) {
     console.error('내 질문 로드 실패:', err);
@@ -866,12 +870,21 @@ function deleteUserQuestion(index) { // **추가: 내 질문 삭제**
   renderQuestionSelect();
 }
 
-async function saveUserQuestions() { // **추가: 내 질문 저장**
+// index.html (약 597행 부근)
+
+async function saveUserQuestions() { // **내 질문 저장**
+  // 1. 확인 팝업 추가
+  if (!confirm('현재 질문 목록을 저장하고 면접 연습 질문으로 설정하시겠습니까?')) {
+      return;
+  }
+
   // 빈 질문 제거
   userQuestions = userQuestions.filter(q => q.text.trim() !== '');
   
   if (userQuestions.length === 0) {
     alert('저장할 질문이 없습니다. 질문 내용을 입력해주세요.');
+    // 빈 질문 제거 후 목록을 다시 렌더링
+    renderUserQuestions(); 
     return;
   }
   
@@ -887,10 +900,15 @@ async function saveUserQuestions() { // **추가: 내 질문 저장**
     });
     
     if (res.ok) {
+      // 2. 서버 저장 성공 시, savedUserQuestions를 현재 편집 내용으로 업데이트
+      savedUserQuestions = JSON.parse(JSON.stringify(userQuestions)); 
+      
       alert('내가 설정한 질문이 저장되었습니다.');
-      await loadUserQuestions(); // 저장 후 다시 로드하여 최신화
-      renderUserQuestions();
-      renderQuestionSelect();
+      
+      // 3. 목록 즉시 업데이트
+      renderUserQuestions(); // 편집 창 목록 업데이트
+      renderQuestionSelect(); // 면접 질문 선택 목록 업데이트
+      updateCurrentQuestion(); // 현재 선택된 질문 텍스트 업데이트
     }
   } catch (err) {
     alert('저장에 실패했습니다.');
