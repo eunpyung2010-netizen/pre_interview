@@ -537,6 +537,27 @@ function doLogout() {
   sessionStorage.removeItem('interviewUser');
   practices = [];
   
+  // 관리자 탭 숨기기
+  document.getElementById('adminTabBtn').classList.add('hidden');
+  
+  // 결과 영역 초기화
+  document.getElementById('resultsList').innerHTML = '';
+  document.getElementById('resultDetail').classList.add('hidden');
+  document.getElementById('comparisonCard').classList.add('hidden');
+  document.getElementById('noResults').classList.remove('hidden');
+  
+  // 진행률 초기화
+  document.getElementById('progressCount').textContent = '0 / 3 회';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('limitAlert').classList.add('hidden');
+  document.getElementById('recordBtn').disabled = false;
+  
+  // 첫 번째 탭으로 이동
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('.tab-btn').classList.add('active');
+  document.getElementById('practice').classList.add('active');
+  
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('mainScreen').classList.add('hidden');
   document.getElementById('loginId').value = '';
