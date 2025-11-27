@@ -1,14 +1,11 @@
 {
   "version": 2,
- 
+  
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
     }
+    // index.html 관련 라우팅 규칙은 삭제합니다.
   ]
 }
