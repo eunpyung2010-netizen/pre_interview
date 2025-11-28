@@ -496,6 +496,107 @@
     .final-message strong {
       color: #10B981;
     }
+    
+    /* 음성 분석 결과 스타일 */
+    .voice-analysis-section {
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .voice-analysis-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    
+    .voice-analysis-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #C4B5FD;
+      margin: 0;
+    }
+    
+    .voice-analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .voice-analysis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .voice-metric {
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    
+    .voice-metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .voice-metric-label {
+      font-size: 0.9rem;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .voice-metric-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e8e8e8;
+    }
+    
+    .voice-meter {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .voice-meter-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .voice-meter-fill.excellent { background: linear-gradient(90deg, #10B981, #34D399); }
+    .voice-meter-fill.good { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+    .voice-meter-fill.warning { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+    .voice-meter-fill.low { background: linear-gradient(90deg, #EF4444, #F87171); }
+    
+    .voice-metric-desc {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 0.5rem;
+    }
+    
+    .voice-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .voice-status-badge.excellent { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+    .voice-status-badge.good { background: rgba(59,130,246,0.2); color: #93C5FD; }
+    .voice-status-badge.warning { background: rgba(245,158,11,0.2); color: #FCD34D; }
+    .voice-status-badge.low { background: rgba(239,68,68,0.2); color: #FCA5A5; }
   </style>
 </head>
 <body>
@@ -624,6 +725,17 @@
       </div>
       
       <div class="detail-content">
+        <!-- 음성 분석 결과 (새로 추가) -->
+        <div class="voice-analysis-section hidden" id="voiceAnalysisSection">
+          <div class="voice-analysis-header">
+            <span style="font-size: 1.5rem;">📊</span>
+            <h3>음성 분석 결과</h3>
+          </div>
+          <div class="voice-analysis-grid" id="voiceAnalysisGrid">
+            <!-- JavaScript로 동적 생성 -->
+          </div>
+        </div>
+        
         <!-- 질문 -->
         <div class="detail-block">
           <div class="detail-block-header">
@@ -827,6 +939,15 @@ let sampleIsRecording = false;
 let sampleAudioContext = null;
 let sampleAnalyser = null;
 let sampleAnimationId = null;
+
+// 음성 분석용 데이터
+let voiceAnalysisData = {
+  volumeSamples: [],       // 볼륨 샘플 (평균 음량 계산용)
+  silenceTime: 0,          // 침묵 시간 (ms)
+  speakingTime: 0,         // 말하기 시간 (ms)
+  lastSampleTime: null,    // 마지막 샘플 시간
+  silenceThreshold: 15     // 침묵 판단 임계값 (0-255)
+};
 
 // API 베이스 URL (개발/프로덕션 자동 감지)
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
@@ -1359,6 +1480,9 @@ function viewResult(index) {
   document.getElementById('detailQuestion').textContent = p.question;
   document.getElementById('detailTranscript').textContent = p.transcript || '(텍스트 변환 결과 없음)';
   
+  // 음성 분석 결과 렌더링
+  renderVoiceAnalysis(p.voiceAnalysis);
+  
   // AI 피드백을 대시보드 카드로 렌더링
   renderFeedbackDashboard(p.feedback);
   
@@ -1370,6 +1494,104 @@ function viewResult(index) {
   setTimeout(() => {
     detail.style.animation = 'slideDown 0.3s ease';
   }, 10);
+}
+
+// 음성 분석 결과 렌더링
+function renderVoiceAnalysis(voiceAnalysis) {
+  const section = document.getElementById('voiceAnalysisSection');
+  const grid = document.getElementById('voiceAnalysisGrid');
+  
+  if (!voiceAnalysis) {
+    section.classList.add('hidden');
+    return;
+  }
+  
+  section.classList.remove('hidden');
+  
+  // 평가 등급 함수
+  const getVolumeStatus = (percent) => {
+    if (percent >= 60 && percent <= 90) return { label: '적당함', class: 'excellent', icon: '✓' };
+    if (percent >= 40 && percent < 60) return { label: '조금 작음', class: 'warning', icon: '!' };
+    if (percent > 90) return { label: '조금 큼', class: 'warning', icon: '!' };
+    return { label: '너무 작음', class: 'low', icon: '✗' };
+  };
+  
+  const getSpeakingStatus = (ratio) => {
+    if (ratio >= 70) return { label: '좋음', class: 'excellent', icon: '✓' };
+    if (ratio >= 50) return { label: '보통', class: 'good', icon: '○' };
+    if (ratio >= 30) return { label: '침묵 많음', class: 'warning', icon: '!' };
+    return { label: '침묵 과다', class: 'low', icon: '✗' };
+  };
+  
+  const getWpmStatus = (wpm) => {
+    if (wpm >= 100 && wpm <= 150) return { label: '적당함', class: 'excellent', icon: '✓' };
+    if (wpm >= 80 && wpm < 100) return { label: '조금 느림', class: 'good', icon: '○' };
+    if (wpm > 150 && wpm <= 180) return { label: '조금 빠름', class: 'warning', icon: '!' };
+    if (wpm < 80) return { label: '느림', class: 'warning', icon: '!' };
+    return { label: '매우 빠름', class: 'low', icon: '✗' };
+  };
+  
+  const getConsistencyStatus = (score) => {
+    if (score >= 70) return { label: '일관됨', class: 'excellent', icon: '✓' };
+    if (score >= 50) return { label: '보통', class: 'good', icon: '○' };
+    if (score >= 30) return { label: '변동 있음', class: 'warning', icon: '!' };
+    return { label: '불안정', class: 'low', icon: '✗' };
+  };
+  
+  const volumeStatus = getVolumeStatus(voiceAnalysis.volumePercent);
+  const speakingStatus = getSpeakingStatus(voiceAnalysis.speakingRatio);
+  const wpmStatus = getWpmStatus(voiceAnalysis.wpm);
+  const consistencyStatus = getConsistencyStatus(voiceAnalysis.consistencyScore);
+  
+  grid.innerHTML = `
+    <!-- 평균 음량 -->
+    <div class="voice-metric">
+      <div class="voice-metric-header">
+        <span class="voice-metric-label">🔊 평균 음량</span>
+        <span class="voice-status-badge ${volumeStatus.class}">${volumeStatus.icon} ${volumeStatus.label}</span>
+      </div>
+      <div class="voice-meter">
+        <div class="voice-meter-fill ${volumeStatus.class}" style="width: ${voiceAnalysis.volumePercent}%"></div>
+      </div>
+      <div class="voice-metric-desc">마이크에 잡힌 평균 음량입니다. 60~90% 사이가 적당합니다.</div>
+    </div>
+    
+    <!-- 말하기 비율 -->
+    <div class="voice-metric">
+      <div class="voice-metric-header">
+        <span class="voice-metric-label">💬 말하기 비율</span>
+        <span class="voice-status-badge ${speakingStatus.class}">${speakingStatus.icon} ${speakingStatus.label}</span>
+      </div>
+      <div class="voice-meter">
+        <div class="voice-meter-fill ${speakingStatus.class}" style="width: ${voiceAnalysis.speakingRatio}%"></div>
+      </div>
+      <div class="voice-metric-desc">${voiceAnalysis.speakingRatio}% 말하기 / ${100 - voiceAnalysis.speakingRatio}% 침묵 (녹음 ${voiceAnalysis.recordingDuration}초 기준)</div>
+    </div>
+    
+    <!-- 예상 속도 -->
+    <div class="voice-metric">
+      <div class="voice-metric-header">
+        <span class="voice-metric-label">⚡ 예상 속도</span>
+        <span class="voice-status-badge ${wpmStatus.class}">${wpmStatus.icon} ${wpmStatus.label}</span>
+      </div>
+      <div class="voice-meter">
+        <div class="voice-meter-fill ${wpmStatus.class}" style="width: ${Math.min(100, (voiceAnalysis.wpm / 180) * 100)}%"></div>
+      </div>
+      <div class="voice-metric-desc">분당 약 ${voiceAnalysis.wpm}단어 (총 ${voiceAnalysis.wordCount}단어). 100~150 WPM이 적당합니다.</div>
+    </div>
+    
+    <!-- 음량 일관성 -->
+    <div class="voice-metric">
+      <div class="voice-metric-header">
+        <span class="voice-metric-label">📈 음량 일관성</span>
+        <span class="voice-status-badge ${consistencyStatus.class}">${consistencyStatus.icon} ${consistencyStatus.label}</span>
+      </div>
+      <div class="voice-meter">
+        <div class="voice-meter-fill ${consistencyStatus.class}" style="width: ${voiceAnalysis.consistencyScore}%"></div>
+      </div>
+      <div class="voice-metric-desc">말하는 동안 음량이 얼마나 일정한지 보여줍니다.</div>
+    </div>
+  `;
 }
 
 function renderFeedbackDashboard(feedback) {
@@ -1571,7 +1793,7 @@ function updateTimerDisplay() {
   }
 }
 
-// 파형 시각화
+// 파형 시각화 + 음성 분석 데이터 수집
 function startWaveform(stream) {
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
   analyser = audioContext.createAnalyser();
@@ -1587,9 +1809,39 @@ function startWaveform(stream) {
   canvas.width = canvas.offsetWidth;
   canvas.height = canvas.offsetHeight;
   
+  // 음성 분석 데이터 초기화
+  voiceAnalysisData = {
+    volumeSamples: [],
+    silenceTime: 0,
+    speakingTime: 0,
+    lastSampleTime: performance.now(),
+    silenceThreshold: 15
+  };
+  
   function draw() {
     animationId = requestAnimationFrame(draw);
     analyser.getByteFrequencyData(dataArray);
+    
+    // === 음성 분석 데이터 수집 ===
+    const now = performance.now();
+    const deltaTime = now - voiceAnalysisData.lastSampleTime;
+    voiceAnalysisData.lastSampleTime = now;
+    
+    // 평균 볼륨 계산 (현재 프레임)
+    let sum = 0;
+    for (let i = 0; i < bufferLength; i++) {
+      sum += dataArray[i];
+    }
+    const avgVolume = sum / bufferLength;
+    voiceAnalysisData.volumeSamples.push(avgVolume);
+    
+    // 침묵 vs 말하기 시간 계산
+    if (avgVolume < voiceAnalysisData.silenceThreshold) {
+      voiceAnalysisData.silenceTime += deltaTime;
+    } else {
+      voiceAnalysisData.speakingTime += deltaTime;
+    }
+    // === 음성 분석 데이터 수집 끝 ===
     
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1612,6 +1864,46 @@ function startWaveform(stream) {
   }
   
   draw();
+}
+
+// 음성 분석 결과 계산
+function calculateVoiceAnalysis(transcript, recordingDuration) {
+  const samples = voiceAnalysisData.volumeSamples;
+  
+  if (samples.length === 0) {
+    return null;
+  }
+  
+  // 1. 평균 음량 (0-100%)
+  const avgVolume = samples.reduce((a, b) => a + b, 0) / samples.length;
+  const volumePercent = Math.min(100, Math.round((avgVolume / 80) * 100)); // 80을 기준으로 정규화
+  
+  // 2. 말하기 비율
+  const totalTime = voiceAnalysisData.speakingTime + voiceAnalysisData.silenceTime;
+  const speakingRatio = totalTime > 0 
+    ? Math.round((voiceAnalysisData.speakingTime / totalTime) * 100) 
+    : 0;
+  
+  // 3. 말 빠르기 (WPM - Words Per Minute)
+  const wordCount = transcript ? transcript.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+  const durationMinutes = recordingDuration / 60;
+  const wpm = durationMinutes > 0 ? Math.round(wordCount / durationMinutes) : 0;
+  
+  // 4. 음량 일관성 (표준편차 기반)
+  const mean = avgVolume;
+  const squaredDiffs = samples.map(v => Math.pow(v - mean, 2));
+  const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / squaredDiffs.length;
+  const stdDev = Math.sqrt(avgSquaredDiff);
+  const consistencyScore = Math.max(0, Math.min(100, Math.round(100 - (stdDev * 2))));
+  
+  return {
+    volumePercent,
+    speakingRatio,
+    wpm,
+    wordCount,
+    consistencyScore,
+    recordingDuration: Math.round(recordingDuration)
+  };
 }
 
 function stopWaveform() {
@@ -1693,13 +1985,17 @@ ${transcript}
     const analyzeData = await analyzeRes.json();
     const feedback = analyzeData.content;
     
+    // 음성 분석 결과 계산
+    const recordingDuration = 60 - timeLeft; // 실제 녹음 시간 (초)
+    const voiceAnalysis = calculateVoiceAnalysis(transcript, recordingDuration);
+    
     // 3. 결과 저장 (음성 파일은 저장하지 않음 - 개인정보 보호)
     const practice = {
       attempt: practices.length + 1,
       question: question,
       transcript: transcript,
       feedback: feedback,
-      // audioData 제거 - 지원자 음성 파일 저장 안 함
+      voiceAnalysis: voiceAnalysis, // 음성 분석 데이터 추가
       timestamp: new Date().toISOString()
     };
     
@@ -2082,9 +2378,69 @@ async function downloadPDF() {
   const index = selectedCard ? Array.from(document.querySelectorAll('.attempt-card')).indexOf(selectedCard) : 0;
   const practice = practices[index];
   const feedback = practice ? practice.feedback : '';
+  const voiceAnalysis = practice ? practice.voiceAnalysis : null;
   
   // 피드백 파싱
   const sections = parseFeedback(feedback);
+  
+  // 음성 분석 HTML 생성
+  let voiceAnalysisHtml = '';
+  if (voiceAnalysis) {
+    const getStatusColor = (value, type) => {
+      if (type === 'volume') return value >= 60 && value <= 90 ? '#6EE7B7' : (value >= 40 ? '#FCD34D' : '#FCA5A5');
+      if (type === 'speaking') return value >= 70 ? '#6EE7B7' : (value >= 50 ? '#93C5FD' : '#FCD34D');
+      if (type === 'wpm') return value >= 100 && value <= 150 ? '#6EE7B7' : (value >= 80 && value <= 180 ? '#FCD34D' : '#FCA5A5');
+      return value >= 70 ? '#6EE7B7' : (value >= 50 ? '#93C5FD' : '#FCD34D');
+    };
+    
+    voiceAnalysisHtml = `
+    <!-- 음성 분석 결과 -->
+    <div style="margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span style="background: rgba(139,92,246,0.2); padding: 6px 10px; border-radius: 8px;">📊</span>
+        <span style="font-weight: 600; color: #ccc;">음성 분석 결과</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #aaa; font-size: 12px;">🔊 평균 음량</span>
+            <span style="color: ${getStatusColor(voiceAnalysis.volumePercent, 'volume')}; font-size: 12px; font-weight: 600;">${voiceAnalysis.volumePercent}%</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${voiceAnalysis.volumePercent}%; height: 100%; background: ${getStatusColor(voiceAnalysis.volumePercent, 'volume')}; border-radius: 3px;"></div>
+          </div>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #aaa; font-size: 12px;">💬 말하기 비율</span>
+            <span style="color: ${getStatusColor(voiceAnalysis.speakingRatio, 'speaking')}; font-size: 12px; font-weight: 600;">${voiceAnalysis.speakingRatio}%</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${voiceAnalysis.speakingRatio}%; height: 100%; background: ${getStatusColor(voiceAnalysis.speakingRatio, 'speaking')}; border-radius: 3px;"></div>
+          </div>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #aaa; font-size: 12px;">⚡ 예상 속도</span>
+            <span style="color: ${getStatusColor(voiceAnalysis.wpm, 'wpm')}; font-size: 12px; font-weight: 600;">분당 ${voiceAnalysis.wpm}단어</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${Math.min(100, (voiceAnalysis.wpm / 180) * 100)}%; height: 100%; background: ${getStatusColor(voiceAnalysis.wpm, 'wpm')}; border-radius: 3px;"></div>
+          </div>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #aaa; font-size: 12px;">📈 음량 일관성</span>
+            <span style="color: ${getStatusColor(voiceAnalysis.consistencyScore, 'consistency')}; font-size: 12px; font-weight: 600;">${voiceAnalysis.consistencyScore}%</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${voiceAnalysis.consistencyScore}%; height: 100%; background: ${getStatusColor(voiceAnalysis.consistencyScore, 'consistency')}; border-radius: 3px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+  }
 
   // PDF용 HTML 생성 (어두운 테마)
   const printArea = document.createElement('div');
@@ -2093,6 +2449,8 @@ async function downloadPDF() {
   printArea.innerHTML = `
     <h1 style="color: #10B981; border-bottom: 2px solid #10B981; padding-bottom: 15px; font-size: 24px; margin-bottom: 10px;">🎯 면접 모의연습 결과</h1>
     <p style="color: #888; font-size: 14px; margin-bottom: 25px;">${title} | ${date} | 면접번호: ${currentUser.interviewId}</p>
+    
+    ${voiceAnalysisHtml}
     
     <!-- 질문 -->
     <div style="margin-bottom: 20px;">
