@@ -806,6 +806,330 @@
       color: #FCD34D;
       font-weight: 500;
     }
+/* ==================== 영상 분석 관련 스타일 ==================== */
+
+/* 모드 선택 UI */
+.mode-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.mode-option {
+  flex: 1;
+  max-width: 280px;
+  padding: 1.25rem;
+  background: rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.mode-option:hover {
+  border-color: rgba(16,185,129,0.5);
+  background: rgba(0,0,0,0.4);
+}
+
+.mode-option.selected {
+  border-color: #10B981;
+  background: rgba(16,185,129,0.1);
+}
+
+.mode-option .mode-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.mode-option .mode-title { font-size: 1.1rem; font-weight: 600; color: #e8e8e8; margin-bottom: 0.5rem; }
+.mode-option .mode-desc { font-size: 0.85rem; color: #888; line-height: 1.4; }
+.mode-option.selected .mode-title { color: #10B981; }
+
+.mode-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(59,130,246,0.2);
+  color: #60A5FA;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+}
+
+/* 비디오 프리뷰 영역 */
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 1.5rem;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-preview {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: scaleX(-1);
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.video-canvas {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+}
+
+.video-status {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0,0,0,0.7);
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.video-status.recording { background: rgba(239,68,68,0.8); }
+.video-status .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; }
+.video-status.recording .status-dot { background: #fff; animation: blink 1s infinite; }
+
+.realtime-stats {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  padding: 0.4rem 0.75rem;
+  background: rgba(0,0,0,0.7);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stat-badge .stat-icon { font-size: 1rem; }
+.stat-badge .stat-value { font-weight: 600; }
+.stat-badge.good { border: 1px solid rgba(16,185,129,0.5); }
+.stat-badge.warning { border: 1px solid rgba(245,158,11,0.5); }
+
+.video-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #888;
+}
+
+.video-loading .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: #10B981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 영상 분석 결과 섹션 */
+.video-analysis-section {
+  background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.05));
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.video-analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.video-analysis-header h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #C4B5FD;
+  margin: 0;
+}
+
+.video-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .video-analysis-grid { grid-template-columns: 1fr; }
+  .mode-selector { flex-direction: column; align-items: center; }
+  .mode-option { max-width: 100%; }
+}
+
+.video-metric {
+  background: rgba(0,0,0,0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.video-metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.video-metric-label {
+  font-weight: 600;
+  color: #ccc;
+  font-size: 0.95rem;
+}
+
+.video-metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.video-metric-value.excellent { color: #10B981; }
+.video-metric-value.good { color: #60A5FA; }
+.video-metric-value.warning { color: #F59E0B; }
+.video-metric-value.poor { color: #EF4444; }
+
+.video-metric-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.video-metric-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.video-metric-fill.excellent { background: linear-gradient(90deg, #10B981, #34D399); }
+.video-metric-fill.good { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+.video-metric-fill.warning { background: linear-gradient(90deg, #F59E0B, #FCD34D); }
+.video-metric-fill.poor { background: linear-gradient(90deg, #EF4444, #FCA5A5); }
+
+.video-metric-desc {
+  font-size: 0.85rem;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* 감정 분포 그래프 */
+.emotion-chart-container {
+  grid-column: 1 / -1;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.emotion-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.emotion-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emotion-label {
+  width: 60px;
+  font-size: 0.85rem;
+  color: #aaa;
+  text-align: right;
+}
+
+.emotion-bar {
+  flex-grow: 1;
+  height: 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.emotion-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: #C4B5FD;
+  transition: width 0.5s ease;
+}
+
+.emotion-percent {
+  width: 40px;
+  font-size: 0.85rem;
+  color: #C4B5FD;
+  font-weight: 600;
+}
+
+/* 영상 분석 요약 */
+.video-summary {
+  background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.05));
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  grid-column: 1 / -1;
+}
+
+.video-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #10B981;
+  margin-bottom: 0.75rem;
+}
+
+.video-summary-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.video-summary-item {
+  padding: 0.4rem 0.75rem;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #ccc;
+}
+
+.video-summary-item.highlight {
+  background: rgba(245,158,11,0.2);
+  color: #FCD34D;
+  font-weight: 500;
+}
+
+    
   </style>
 </head>
 <body>
@@ -865,13 +1189,41 @@
         <span>⚠️</span>
         <span>연습 기회 3회를 모두 사용하셨습니다. 결과 탭에서 분석 내용을 확인하세요.</span>
       </div>
-      
+      <!-- 모드 선택 UI -->
+<div class="mode-selector" id="modeSelector">
+  <div class="mode-option selected" onclick="selectMode('audio')" id="modeAudio">
+    <div class="mode-icon">🎤</div>
+    <div class="mode-title">음성만 분석</div>
+    <div class="mode-desc">마이크로 답변을 녹음하고<br>AI 피드백을 받습니다</div>
+  </div>
+  <div class="mode-option" onclick="selectMode('video')" id="modeVideo">
+    <div class="mode-icon">🎬</div>
+    <div class="mode-title">음성 + 영상 분석</div>
+    <div class="mode-desc">카메라로 표정, 시선, 자세까지<br>종합 분석합니다</div>
+    <div class="mode-badge">NEW</div>
+  </div>
+</div>
       <div class="recording-area" id="recordingArea">
         <div class="question-display">
           <div class="question-label">질문</div>
           <div class="question-text" id="questionText">우리 기관에 지원한 동기를 소개해주세요.</div>
         </div>
-        
+        <!-- 비디오 프리뷰 영역 -->
+<div class="video-container hidden" id="videoContainer">
+  <video class="video-preview" id="videoPreview" autoplay muted playsinline></video>
+  <div class="video-overlay">
+    <canvas class="video-canvas" id="videoCanvas"></canvas>
+  </div>
+  <div class="video-status" id="videoStatus">
+    <span class="status-dot"></span>
+    <span id="videoStatusText">카메라 준비 중...</span>
+  </div>
+  <div class="realtime-stats" id="realtimeStats"></div>
+  <div class="video-loading hidden" id="videoLoading">
+    <div class="spinner"></div>
+    <div>AI 모델 로딩 중...</div>
+  </div>
+</div>
         <div class="timer-display" id="timerDisplay">01:00</div>
         
         <div class="waveform-container">
@@ -944,6 +1296,15 @@
             <!-- JavaScript로 동적 생성 -->
           </div>
         </div>
+
+<!-- 영상 분석 결과 섹션 -->
+<div class="video-analysis-section hidden" id="videoAnalysisSection">
+  <div class="video-analysis-header">
+    <span style="font-size: 1.5rem;">🎬</span>
+    <h3>영상 분석 결과</h3>
+  </div>
+  <div class="video-analysis-grid" id="videoAnalysisGrid"></div>
+</div>
         
         <!-- 질문 -->
         <div class="detail-block">
@@ -1170,6 +1531,26 @@ let voiceAnalysisData = {
   volumeChanges: []            // 볼륨 변화량 기록 (활기 측정용)
 };
 
+// ==================== 영상 분석 관련 전역 변수 ====================
+let analysisMode = 'audio';
+let videoStream = null;
+let videoRecorder = null;
+let videoChunks = [];
+let videoBlob = null;
+let faceApiLoaded = false;
+let faceDetectionInterval = null;
+
+let videoAnalysisData = {
+  expressionSamples: [],
+  gazeDirections: [],
+  headPoses: [],
+  cameraLookRatio: 0,
+  dominantExpression: null,
+  expressionDistribution: {},
+  stabilityScore: 0,
+  smileRatio: 0
+};
+
 // API 베이스 URL (개발/프로덕션 자동 감지)
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
 
@@ -1191,6 +1572,288 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// face-api.js 라이브러리 동적 로드
+async function loadFaceApi() {
+  if (faceApiLoaded) return true;
+  
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js';
+    script.onload = async () => {
+      try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL)
+        ]);
+        faceApiLoaded = true;
+        console.log('face-api.js 모델 로드 완료');
+        resolve(true);
+      } catch (err) {
+        console.error('face-api.js 모델 로드 실패:', err);
+        reject(err);
+      }
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+function selectMode(mode) {
+  analysisMode = mode;
+  document.getElementById('modeAudio').classList.toggle('selected', mode === 'audio');
+  document.getElementById('modeVideo').classList.toggle('selected', mode === 'video');
+  
+  const videoContainer = document.getElementById('videoContainer');
+  if (mode === 'video') {
+    videoContainer.classList.remove('hidden');
+    initVideoPreview();
+  } else {
+    videoContainer.classList.add('hidden');
+    stopVideoPreview();
+  }
+}
+
+async function initVideoPreview() {
+  const video = document.getElementById('videoPreview');
+  const loading = document.getElementById('videoLoading');
+  
+  loading.classList.remove('hidden');
+  
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+      audio: false 
+    });
+    
+    video.srcObject = videoStream;
+    await video.play();
+    await loadFaceApi();
+    
+    loading.classList.add('hidden');
+    document.getElementById('videoStatusText').textContent = '카메라 준비 완료';
+    
+    const canvas = document.getElementById('videoCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    startRealtimeFaceDetection();
+  } catch (err) {
+    console.error('카메라 초기화 실패:', err);
+    loading.innerHTML = '<div style="padding:2rem;text-align:center;color:#888;">📷 카메라를 사용할 수 없습니다<br><small>카메라 권한을 허용해주세요</small></div>';
+  }
+}
+
+function stopVideoPreview() {
+  if (faceDetectionInterval) {
+    clearInterval(faceDetectionInterval);
+    faceDetectionInterval = null;
+  }
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+    videoStream = null;
+  }
+}
+
+function startRealtimeFaceDetection() {
+  const video = document.getElementById('videoPreview');
+  const canvas = document.getElementById('videoCanvas');
+  const ctx = canvas.getContext('2d');
+  const statsContainer = document.getElementById('realtimeStats');
+  
+  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+  
+  faceDetectionInterval = setInterval(async () => {
+    if (!video.srcObject) return;
+    
+    try {
+      const detection = await faceapi
+        .detectSingleFace(video, options)
+        .withFaceLandmarks(true)
+        .withFaceExpressions();
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (detection) {
+        const box = detection.detection.box;
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(box.x, box.y, box.width, box.height);
+        
+        const expressions = detection.expressions;
+        const sorted = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
+        const dominant = sorted[0];
+        const gazeDirection = estimateGazeDirection(detection.landmarks);
+        
+        statsContainer.innerHTML = `
+          <div class="stat-badge ${dominant[1] > 0.5 ? 'good' : ''}">
+            <span class="stat-icon">${getExpressionEmoji(dominant[0])}</span>
+            <span class="stat-value">${translateExpression(dominant[0])}</span>
+          </div>
+          <div class="stat-badge ${gazeDirection === 'center' ? 'good' : 'warning'}">
+            <span class="stat-icon">👁️</span>
+            <span class="stat-value">${translateGaze(gazeDirection)}</span>
+          </div>
+        `;
+        
+        if (isRecording && analysisMode === 'video') {
+          collectVideoAnalysisData(detection, gazeDirection);
+        }
+      } else {
+        statsContainer.innerHTML = '<div class="stat-badge warning"><span class="stat-icon">⚠️</span><span class="stat-value">얼굴 감지 안됨</span></div>';
+      }
+    } catch (err) {
+      console.error('얼굴 감지 오류:', err);
+    }
+  }, 200);
+}
+
+function estimateGazeDirection(landmarks) {
+  if (!landmarks) return 'unknown';
+  const positions = landmarks.positions;
+  const noseTip = positions[30];
+  const leftEye = landmarks.getLeftEye();
+  const rightEye = landmarks.getRightEye();
+  
+  const leftEyeCenter = { x: leftEye.reduce((s, p) => s + p.x, 0) / leftEye.length, y: leftEye.reduce((s, p) => s + p.y, 0) / leftEye.length };
+  const rightEyeCenter = { x: rightEye.reduce((s, p) => s + p.x, 0) / rightEye.length, y: rightEye.reduce((s, p) => s + p.y, 0) / rightEye.length };
+  
+  const faceCenterX = (leftEyeCenter.x + rightEyeCenter.x) / 2;
+  const horizontalOffset = noseTip.x - faceCenterX;
+  const eyeDistance = Math.abs(rightEyeCenter.x - leftEyeCenter.x);
+  const normalizedOffset = horizontalOffset / eyeDistance;
+  
+  if (Math.abs(normalizedOffset) < 0.15) return 'center';
+  return normalizedOffset > 0 ? 'right' : 'left';
+}
+
+function collectVideoAnalysisData(detection, gazeDirection) {
+  if (!detection) return;
+  videoAnalysisData.expressionSamples.push({ timestamp: Date.now(), expressions: { ...detection.expressions } });
+  videoAnalysisData.gazeDirections.push(gazeDirection);
+  
+  const positions = detection.landmarks.positions;
+  const leftEye = positions[36], rightEye = positions[45];
+  const eyeSlope = (rightEye.y - leftEye.y) / (rightEye.x - leftEye.x);
+  const roll = Math.atan(eyeSlope) * (180 / Math.PI);
+  videoAnalysisData.headPoses.push({ roll });
+}
+
+function getExpressionEmoji(exp) {
+  return { neutral: '😐', happy: '😊', sad: '😢', angry: '😠', fearful: '😨', disgusted: '🤢', surprised: '😲' }[exp] || '🙂';
+}
+
+function translateExpression(exp) {
+  return { neutral: '중립', happy: '미소', sad: '슬픔', angry: '화남', fearful: '불안', disgusted: '불쾌', surprised: '놀람' }[exp] || exp;
+}
+
+function translateGaze(dir) {
+  return { center: '정면 응시', left: '왼쪽', right: '오른쪽', unknown: '감지 안됨' }[dir] || dir;
+}
+
+function processVideoAnalysisData() {
+  const data = videoAnalysisData;
+  if (data.expressionSamples.length === 0) return;
+  
+  // 카메라 응시 비율
+  const centerCount = data.gazeDirections.filter(d => d === 'center').length;
+  data.cameraLookRatio = Math.round((centerCount / data.gazeDirections.length) * 100);
+  
+  // 표정 분포
+  const expressionTotals = { neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
+  data.expressionSamples.forEach(sample => {
+    Object.keys(expressionTotals).forEach(exp => {
+      expressionTotals[exp] += sample.expressions[exp] || 0;
+    });
+  });
+  
+  const sampleCount = data.expressionSamples.length;
+  Object.keys(expressionTotals).forEach(exp => {
+    data.expressionDistribution[exp] = Math.round((expressionTotals[exp] / sampleCount) * 100);
+  });
+  
+  // 주요 표정
+  const sorted = Object.entries(data.expressionDistribution).sort((a, b) => b[1] - a[1]);
+  data.dominantExpression = sorted[0][0];
+  data.smileRatio = data.expressionDistribution.happy || 0;
+  
+  // 자세 안정성
+  if (data.headPoses.length > 1) {
+    let totalChange = 0;
+    for (let i = 1; i < data.headPoses.length; i++) {
+      totalChange += Math.abs(data.headPoses[i].roll - data.headPoses[i-1].roll);
+    }
+    const avgChange = totalChange / (data.headPoses.length - 1);
+    data.stabilityScore = Math.max(0, Math.min(100, Math.round(100 - avgChange * 5)));
+  } else {
+    data.stabilityScore = 80;
+  }
+}
+
+function renderVideoAnalysis(videoAnalysis) {
+  const section = document.getElementById('videoAnalysisSection');
+  const grid = document.getElementById('videoAnalysisGrid');
+  
+  if (!videoAnalysis || !videoAnalysis.cameraLookRatio) {
+    section.classList.add('hidden');
+    return;
+  }
+  
+  section.classList.remove('hidden');
+  
+  const getGazeStatus = (r) => r >= 70 ? { label: '훌륭함', class: 'excellent', icon: '✓' } : r >= 50 ? { label: '좋음', class: 'good', icon: '○' } : r >= 30 ? { label: '개선 필요', class: 'warning', icon: '!' } : { label: '많은 개선 필요', class: 'low', icon: '✗' };
+  const getSmileStatus = (r) => r >= 30 ? { label: '밝은 인상', class: 'excellent', icon: '✓' } : r >= 15 ? { label: '적당함', class: 'good', icon: '○' } : r >= 5 ? { label: '조금 경직', class: 'warning', icon: '!' } : { label: '긴장됨', class: 'low', icon: '✗' };
+  const getStabilityStatus = (s) => s >= 80 ? { label: '안정적', class: 'excellent', icon: '✓' } : s >= 60 ? { label: '양호', class: 'good', icon: '○' } : s >= 40 ? { label: '움직임 많음', class: 'warning', icon: '!' } : { label: '불안정', class: 'low', icon: '✗' };
+  
+  const gazeStatus = getGazeStatus(videoAnalysis.cameraLookRatio);
+  const smileStatus = getSmileStatus(videoAnalysis.smileRatio);
+  const stabilityStatus = getStabilityStatus(videoAnalysis.stabilityScore);
+  
+  let summaryItems = [];
+  if (videoAnalysis.cameraLookRatio >= 70) summaryItems.push({ text: '카메라 응시 훌륭', type: 'positive' });
+  else if (videoAnalysis.cameraLookRatio < 50) summaryItems.push({ text: '카메라 응시 더 자주', type: 'warning' });
+  if (videoAnalysis.smileRatio >= 20) summaryItems.push({ text: '밝은 표정 유지', type: 'positive' });
+  else if (videoAnalysis.smileRatio < 10) summaryItems.push({ text: '가벼운 미소 권장', type: 'warning' });
+  if (videoAnalysis.stabilityScore >= 70) summaryItems.push({ text: '안정된 자세', type: 'positive' });
+  else if (videoAnalysis.stabilityScore < 50) summaryItems.push({ text: '자세 안정 필요', type: 'warning' });
+  
+  const expressionBars = Object.entries(videoAnalysis.expressionDistribution || {})
+    .map(([exp, value]) => `<div class="expression-bar"><div class="expression-bar-fill" style="height:${Math.min(100,value)}%"></div><div class="expression-bar-value">${value}%</div><div class="expression-bar-label">${getExpressionEmoji(exp)}</div></div>`).join('');
+  
+  grid.innerHTML = `
+    ${summaryItems.length > 0 ? `<div class="video-summary"><div class="video-summary-title"><span>🎬</span><span>영상 분석 한눈에 보기</span></div><div class="video-summary-items">${summaryItems.map(i => `<span class="video-summary-item ${i.type}">${i.text}</span>`).join('')}</div></div>` : ''}
+    
+    <div class="video-metric">
+      <div class="video-metric-header"><span class="video-metric-label">👁️ 카메라 응시</span><span class="voice-status-badge ${gazeStatus.class}">${gazeStatus.icon} ${gazeStatus.label}</span></div>
+      <div class="video-metric-value ${gazeStatus.class}">${videoAnalysis.cameraLookRatio}%</div>
+      <div class="video-metric-bar"><div class="video-metric-fill ${gazeStatus.class}" style="width:${videoAnalysis.cameraLookRatio}%"></div></div>
+      <div class="video-metric-desc">화상 면접에서는 카메라 렌즈를 직접 바라봐야 면접관과 눈을 맞추는 효과가 있어요.</div>
+    </div>
+    
+    <div class="video-metric">
+      <div class="video-metric-header"><span class="video-metric-label">😊 미소 비율</span><span class="voice-status-badge ${smileStatus.class}">${smileStatus.icon} ${smileStatus.label}</span></div>
+      <div class="video-metric-value ${smileStatus.class}">${videoAnalysis.smileRatio}%</div>
+      <div class="video-metric-bar"><div class="video-metric-fill ${smileStatus.class}" style="width:${Math.min(100,videoAnalysis.smileRatio*2)}%"></div></div>
+      <div class="video-metric-desc">핵심 포인트에서 가벼운 미소를 지으면 호감도가 올라가요.</div>
+    </div>
+    
+    <div class="video-metric">
+      <div class="video-metric-header"><span class="video-metric-label">🧍 자세 안정성</span><span class="voice-status-badge ${stabilityStatus.class}">${stabilityStatus.icon} ${stabilityStatus.label}</span></div>
+      <div class="video-metric-value ${stabilityStatus.class}">${videoAnalysis.stabilityScore}%</div>
+      <div class="video-metric-bar"><div class="video-metric-fill ${stabilityStatus.class}" style="width:${videoAnalysis.stabilityScore}%"></div></div>
+      <div class="video-metric-desc">상체를 안정적으로 유지하면 자신감 있는 인상을 줄 수 있어요.</div>
+    </div>
+    
+    <div class="video-metric">
+      <div class="video-metric-header"><span class="video-metric-label">😐 표정 분포</span><span class="voice-status-badge good">${getExpressionEmoji(videoAnalysis.dominantExpression)} 주요: ${translateExpression(videoAnalysis.dominantExpression)}</span></div>
+      <div class="expression-chart">${expressionBars}</div>
+      <div class="video-metric-desc">녹화 중 감지된 표정의 분포입니다. 다양한 표정을 자연스럽게 사용하면 좋아요.</div>
+    </div>
+  `;
+}
+  
+  
 // ==================== 로그인 ====================
 async function doLogin() {
   const id = document.getElementById('loginId').value.trim();
@@ -1700,8 +2363,23 @@ function viewResult(index) {
   document.getElementById('detailQuestion').textContent = p.question;
   document.getElementById('detailTranscript').textContent = p.transcript || '(텍스트 변환 결과 없음)';
   
-  // 음성 분석 결과 렌더링
-  renderVoiceAnalysis(p.voiceAnalysis);
+// 음성 분석 결과 렌더링 (기존 로직을 조건부로 변경)
+const voiceAnalysisSection = document.getElementById('voiceAnalysisSection');
+if (practice.voiceAnalysis && Object.keys(practice.voiceAnalysis).length > 0) {
+  voiceAnalysisSection.classList.remove('hidden');
+  renderVoiceAnalysis(practice.voiceAnalysis);
+} else {
+  voiceAnalysisSection.classList.add('hidden');
+}
+
+// 영상 분석 결과 렌더링 (새로 추가)
+const videoAnalysisResultSection = document.getElementById('videoAnalysisResultSection');
+if (practice.videoAnalysis && Object.keys(practice.videoAnalysis).length > 0) {
+    videoAnalysisResultSection.classList.remove('hidden');
+    renderVideoAnalysis(practice.videoAnalysis);
+} else {
+    videoAnalysisResultSection.classList.add('hidden');
+}
   
   // AI 피드백을 대시보드 카드로 렌더링
   renderFeedbackDashboard(p.feedback);
@@ -2025,23 +2703,44 @@ async function toggleRecording() {
 
 async function startRecording() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    
-    mediaRecorder.ondataavailable = (e) => {
-      audioChunks.push(e.data);
+    // 영상 분석 데이터 초기화
+    videoAnalysisData = {
+      expressionSamples: [], gazeDirections: [], headPoses: [],
+      cameraLookRatio: 0, dominantExpression: null, expressionDistribution: {},
+      stabilityScore: 0, smileRatio: 0
     };
     
+    const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    // 영상 모드일 경우 비디오 녹화도 시작
+    if (analysisMode === 'video' && videoStream) {
+      const combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioStream.getAudioTracks()
+      ]);
+      
+      videoRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+      videoChunks = [];
+      videoRecorder.ondataavailable = (e) => videoChunks.push(e.data);
+      videoRecorder.onstop = () => { videoBlob = new Blob(videoChunks, { type: 'video/webm' }); };
+      videoRecorder.start();
+      
+      const videoStatus = document.getElementById('videoStatus');
+      videoStatus.classList.add('recording');
+      document.getElementById('videoStatusText').textContent = '녹화 중...';
+    }
+    
+    // 기존 오디오 녹음 코드...
+    mediaRecorder = new MediaRecorder(audioStream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
     mediaRecorder.onstop = () => {
       audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
       audioUrl = URL.createObjectURL(audioBlob);
       document.getElementById('audioPlayback').src = audioUrl;
       document.getElementById('audioPlayer').classList.remove('hidden');
-      
-      // 녹음 종료 시 스트림 정리
-      stream.getTracks().forEach(track => track.stop());
+      audioStream.getTracks().forEach(track => track.stop());
     };
     
     mediaRecorder.start();
@@ -2055,20 +2754,20 @@ async function startRecording() {
     document.getElementById('recordingStatus').classList.remove('hidden');
     document.getElementById('waveformOverlay').classList.add('hidden');
     
+    // 모드 선택 비활성화
+    document.getElementById('modeSelector').style.pointerEvents = 'none';
+    document.getElementById('modeSelector').style.opacity = '0.5';
+    
     // 타이머 시작
     timeLeft = 60;
     updateTimerDisplay();
     timerInterval = setInterval(() => {
       timeLeft--;
       updateTimerDisplay();
-      if (timeLeft <= 0) {
-        stopRecording();
-      }
+      if (timeLeft <= 0) stopRecording();
     }, 1000);
     
-    // 파형 시각화 시작
-    startWaveform(stream);
-    
+    startWaveform(audioStream);
   } catch (err) {
     alert('마이크 권한이 필요합니다.');
     console.error(err);
@@ -2076,8 +2775,14 @@ async function startRecording() {
 }
 
 function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  
+  // 영상 녹화 중지
+  if (videoRecorder && videoRecorder.state !== 'inactive') {
+    videoRecorder.stop();
+    const videoStatus = document.getElementById('videoStatus');
+    videoStatus.classList.remove('recording');
+    document.getElementById('videoStatusText').textContent = '녹화 완료';
   }
   
   isRecording = false;
@@ -2091,6 +2796,13 @@ function stopRecording() {
   btn.textContent = '🎤';
   btn.disabled = true;
   document.getElementById('recordingStatus').classList.add('hidden');
+  
+  // 모드 선택 다시 활성화
+  document.getElementById('modeSelector').style.pointerEvents = 'auto';
+  document.getElementById('modeSelector').style.opacity = '1';
+  
+  // 영상 분석 데이터 처리
+  if (analysisMode === 'video') processVideoAnalysisData();
 }
 
 function resetRecording() {
@@ -2098,12 +2810,38 @@ function resetRecording() {
   audioUrl = null;
   audioChunks = [];
   
+  // 영상 분석을 위해 새로 추가된 초기화
+  videoBlob = null;
+  videoChunks = []; 
+  
+  // 영상 분석 데이터 초기화
+  videoAnalysisData = {
+    expressionSamples: [], gazeDirections: [], headPoses: [],
+    cameraLookRatio: 0, dominantExpression: null, expressionDistribution: {},
+    stabilityScore: 0, smileRatio: 0
+  };
+  // 실시간 분석 카운트도 초기화 (이전 단계에서 전역 변수 선언부에 추가되었어야 함)
+  lookRatioCount = 0;
+  totalFrameCount = 0;
+  smileCount = 0;
+  
+  // 기존 음성/UI 관련 초기화
   document.getElementById('audioPlayer').classList.add('hidden');
   document.getElementById('recordBtn').disabled = (practices.length >= 3);
   document.getElementById('waveformOverlay').classList.remove('hidden');
   timeLeft = 60;
   updateTimerDisplay();
   document.getElementById('timerDisplay').classList.remove('warning', 'danger');
+  
+  // 비디오 상태 초기화
+  if (analysisMode === 'video') {
+    const videoStatus = document.getElementById('videoStatus');
+    if (videoStatus) {
+      videoStatus.classList.remove('recording');
+      // 카메라가 켜져 있다면, 상태를 '준비 완료'로 변경
+      document.getElementById('videoStatusText').textContent = '카메라 준비 완료';
+    }
+  }
 }
 
 function updateTimerDisplay() {
@@ -2492,14 +3230,21 @@ ${transcript}
     const voiceAnalysis = calculateVoiceAnalysis(transcript, recordingDuration);
     
     // 3. 결과 저장 (음성 파일은 저장하지 않음 - 개인정보 보호)
-    const practice = {
-      attempt: practices.length + 1,
-      question: question,
-      transcript: transcript,
-      feedback: feedback,
-      voiceAnalysis: voiceAnalysis, // 음성 분석 데이터 추가
-      timestamp: new Date().toISOString()
-    };
+   const practice = {
+    attempt: practices.length + 1,
+    question: question,
+    transcript: transcript,
+    feedback: feedback,
+    voiceAnalysis: voiceAnalysis, // 음성 분석 데이터
+    
+    // =======================================================
+    // [영상 분석 데이터 필드 추가]
+    // analysisMode가 'video'일 때만 videoAnalysisData를 저장합니다.
+    videoAnalysis: analysisMode === 'video' ? { ...videoAnalysisData } : null, // <--- 이 줄을 추가
+    // =======================================================
+    
+    timestamp: new Date().toISOString()
+};
     
     const saveRes = await fetch(API_BASE + '/api/practice', {
       method: 'POST',
