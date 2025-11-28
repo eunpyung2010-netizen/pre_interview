@@ -4635,6 +4635,188 @@ ${transcript}
       if (!str) return '';
       return str.length > len ? str.substring(0, len) + '...' : str;
     }
+
+    // ==================== 연습 데이터 로드 및 표시 ====================
+    async function loadPractices() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(API_BASE + '/api/practice?action=getPractices&interviewId=' + currentUser.interviewId);
+        if (res.ok) {
+          const data = await res.json();
+          practices = data.practices || [];
+          renderResults();
+          updateProgress();
+        }
+      } catch (err) {
+        console.error('연습 데이터 로드 실패:', err);
+      }
+    }
+
+    function renderResults() {
+      const grid = document.getElementById('attemptGrid');
+      const noResults = document.getElementById('noResults');
+
+      if (!grid) return;
+
+      if (practices.length === 0) {
+        grid.innerHTML = '';
+        if (noResults) noResults.style.display = 'block';
+        return;
+      }
+
+      if (noResults) noResults.style.display = 'none';
+
+      let html = '';
+      practices.forEach((p, i) => {
+        const date = formatDate(p.timestamp);
+        const questionPreview = truncate(p.question, 50);
+
+        html += `<div class="attempt-card" onclick="viewResult(${i})">
+          <div class="attempt-card-header">
+            <div class="attempt-badge">${p.attempt}회차</div>
+            <div class="attempt-status">✓ 완료</div>
+          </div>
+          <div class="attempt-date">${date}</div>
+          <div class="attempt-question">${questionPreview}</div>
+        </div>`;
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function viewResult(index) {
+      const practice = practices[index];
+      if (!practice) return;
+
+      // 결과 상세 표시
+      document.getElementById('resultDetail')?.classList.remove('hidden');
+      document.getElementById('detailTitle').textContent = `${practice.attempt}회차 분석 결과`;
+      document.getElementById('detailDate').textContent = formatDate(practice.timestamp);
+      document.getElementById('detailQuestion').textContent = practice.question;
+      document.getElementById('detailTranscript').textContent = practice.transcript;
+
+      // 음성 분석 결과 렌더링
+      const voiceSection = document.getElementById('voiceAnalysisSection');
+      if (practice.voiceAnalysis && voiceSection) {
+        voiceSection.classList.remove('hidden');
+        renderVoiceAnalysis(practice.voiceAnalysis);
+      } else if (voiceSection) {
+        voiceSection.classList.add('hidden');
+      }
+
+      // 영상 분석 결과 렌더링
+      const videoSection = document.getElementById('videoAnalysisSection');
+      if (practice.videoAnalysis && videoSection) {
+        videoSection.classList.remove('hidden');
+        renderVideoAnalysis(practice.videoAnalysis);
+      } else if (videoSection) {
+        videoSection.classList.add('hidden');
+      }
+
+      // AI 피드백 렌더링
+      const feedbackEl = document.getElementById('detailFeedback');
+      if (feedbackEl) {
+        const sections = parseFeedback(practice.feedback);
+        feedbackEl.innerHTML = `
+          <div class="feedback-grid">
+            <div class="feedback-card card-relevance">
+              <div class="feedback-card-header">📋 답변의 적절성</div>
+              <div class="feedback-card-content">${sections.relevance || '분석 내용이 없습니다.'}</div>
+            </div>
+            <div class="feedback-card card-strength">
+              <div class="feedback-card-header">✅ 강점 (잘한 부분)</div>
+              <div class="feedback-card-content">${sections.strength || '분석 내용이 없습니다.'}</div>
+            </div>
+            <div class="feedback-card card-improve">
+              <div class="feedback-card-header">🔧 개선점 (보완할 부분)</div>
+              <div class="feedback-card-content">${sections.improvement || '분석 내용이 없습니다.'}</div>
+            </div>
+            <div class="feedback-card card-suggestion">
+              <div class="feedback-card-header">💎 구체적인 개선 제안</div>
+              <div class="feedback-card-content">${sections.suggestion || '분석 내용이 없습니다.'}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 선택된 카드 강조
+      document.querySelectorAll('.attempt-card').forEach((card, i) => {
+        if (i === index) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      });
+    }
+
+    function parseFeedback(feedback) {
+      if (!feedback) return { relevance: '', strength: '', improvement: '', suggestion: '' };
+
+      const sections = { relevance: '', strength: '', improvement: '', suggestion: '' };
+
+      // 섹션별로 파싱
+      const lines = feedback.split('\n');
+      let currentSection = '';
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+
+        // 섹션 헤더 감지
+        if (trimmed.match(/^1\..*적절성/i) || trimmed.match(/답변.*적절성/i)) {
+          currentSection = 'relevance';
+        } else if (trimmed.match(/^2\..*강점/i) || trimmed.match(/잘.*부분/i)) {
+          currentSection = 'strength';
+        } else if (trimmed.match(/^3\..*개선/i) || trimmed.match(/보완.*부분/i)) {
+          currentSection = 'improvement';
+        } else if (trimmed.match(/^4\..*제안/i) || trimmed.match(/구체적.*개선/i)) {
+          currentSection = 'suggestion';
+        } else if (trimmed && currentSection) {
+          // 내용 추가
+          sections[currentSection] += (sections[currentSection] ? '\n' : '') + trimmed;
+        }
+      });
+
+      return sections;
+    }
+
+    function updateProgress() {
+      const count = practices.length;
+      const percent = Math.min(100, (count / 3) * 100);
+
+      document.getElementById('progressCount').textContent = `${count} / 3 회`;
+      document.getElementById('progressFill').style.width = percent + '%';
+
+      ['prog1', 'prog2', 'prog3'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (i < count) {
+            el.classList.add('completed');
+          } else {
+            el.classList.remove('completed');
+          }
+        }
+      });
+
+      // 3회 제한 체크
+      const recordBtn = document.getElementById('recordBtn');
+      const limitAlert = document.getElementById('limitAlert');
+
+      if (count >= 3) {
+        if (recordBtn) recordBtn.disabled = true;
+        if (limitAlert) limitAlert.classList.remove('hidden');
+      } else {
+        if (recordBtn && !isRecording) recordBtn.disabled = false;
+        if (limitAlert) limitAlert.classList.add('hidden');
+      }
+    }
+
+    function toggleRecording() {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    }
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
