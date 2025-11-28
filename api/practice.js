@@ -49,6 +49,14 @@ export default async function handler(req, res) {
         });
       }
 
+      // 지원자별 개인 질문 조회
+      if (action === 'getUserQuestions' && interviewId) {
+        const userQuestions = await kv.get(`userQuestions:${interviewId}`);
+        return res.status(200).json({
+          userQuestions: userQuestions || []
+        });
+      }
+
       return res.status(400).json({ error: '잘못된 요청입니다.' });
     }
 
@@ -65,6 +73,13 @@ export default async function handler(req, res) {
       // 연습 음성 저장 (관리자)
       if (action === 'saveSampleAudios' && sampleAudios !== undefined) {
         await kv.set('sampleAudios', sampleAudios);
+        return res.status(200).json({ success: true });
+      }
+
+      // 지원자별 개인 질문 저장
+      if (action === 'saveUserQuestions' && interviewId) {
+        const { userQuestions } = req.body;
+        await kv.set(`userQuestions:${interviewId}`, userQuestions || []);
         return res.status(200).json({ success: true });
       }
 
