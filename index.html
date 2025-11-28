@@ -2068,7 +2068,7 @@
           </div>
 
           <!-- 영상 분석 결과 섹션 -->
-          <div class="video-analysis-section hidden" id="videoAnalysisResultSection">
+          <div class="video-analysis-section hidden" id="videoAnalysisSection">
             <div class="video-analysis-header">
               <span style="font-size: 1.5rem;">🎬</span>
               <h3>영상 분석 결과</h3>
@@ -2646,16 +2646,15 @@
     }
 
     // 영상 분석 결과를 상세 화면에 렌더링
-    function renderVideoAnalysis(analysis) {
-      const grid = document.getElementById('videoAnalysisGrid');
-      if (!grid) return; // grid가 없으면 안전하게 종료
+    // (Duplicate renderVideoAnalysis removed)
+    if (!grid) return; // grid가 없으면 안전하게 종료
 
-      grid.innerHTML = ''; // 기존 내용 초기화
+    grid.innerHTML = ''; // 기존 내용 초기화
 
-      if (!analysis) return;
+    if (!analysis) return;
 
-      // 1. 주요 지표 렌더링
-      let content = `
+    // 1. 주요 지표 렌더링
+    let content = `
     <div class="analysis-item">
         <span class="icon">😊</span>
         <div class="label">주요 표정</div>
@@ -2678,31 +2677,31 @@
     </div>
   `;
 
-      // 2. 표정 분포 (히스토그램)
-      content += `<div class="analysis-item full-width">
+    // 2. 표정 분포 (히스토그램)
+    content += `<div class="analysis-item full-width">
       <h4>표정 분포</h4>
       <div class="expression-chart">`;
 
-      const expressions = analysis.expressionDistribution;
-      const total = Object.values(expressions).reduce((sum, count) => sum + count, 0);
+    const expressions = analysis.expressionDistribution;
+    const total = Object.values(expressions).reduce((sum, count) => sum + count, 0);
 
-      // 표정 순서 정의
-      const expressionOrder = ['happy', 'neutral', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
+    // 표정 순서 정의
+    const expressionOrder = ['happy', 'neutral', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
 
-      expressionOrder.forEach(key => {
-        const percentage = total > 0 ? (expressions[key] || 0) / total * 100 : 0;
-        if (percentage > 0.1) { // 0.1% 미만은 표시하지 않음
-          content += `<div class="expression-bar-container">
+    expressionOrder.forEach(key => {
+      const percentage = total > 0 ? (expressions[key] || 0) / total * 100 : 0;
+      if (percentage > 0.1) { // 0.1% 미만은 표시하지 않음
+        content += `<div class="expression-bar-container">
               <span class="expression-label">${getExpressionLabel(key)}</span>
               <div class="expression-bar" style="width: ${percentage.toFixed(1)}%;"></div>
               <span class="expression-percent">${percentage.toFixed(1)}%</span>
           </div>`;
-        }
-      });
+      }
+    });
 
-      content += `</div></div>`;
+    content += `</div></div>`;
 
-      grid.innerHTML = content;
+    grid.innerHTML = content;
     }
 
     // ==================== 로그인 ====================
@@ -3880,7 +3879,15 @@
       const samples = voiceAnalysisData.volumeSamples;
 
       if (samples.length === 0) {
-        return null;
+        // 데이터가 없어도 기본값 반환 (분석 결과창 표시를 위해)
+        return {
+          volumePercent: 0, speakingRatio: 0, wpm: 0, wordCount: 0, consistencyScore: 0, recordingDuration: 0,
+          fillerWords: { count: 0, ratio: 0, details: [] },
+          longSilences: { count: 0, avgDuration: 0, details: [] },
+          segmentTrend: { early: 0, middle: 0, late: 0 },
+          trendPattern: 'stable', energyLevel: 0, dynamicScore: 0,
+          wpmGuide: '분석 데이터가 부족합니다.', wpmStatus: 'moderate'
+        };
       }
 
       // 1. 평균 음량 (0-100%)
