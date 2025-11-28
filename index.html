@@ -547,7 +547,7 @@
     
     .voice-metric-label {
       font-size: 0.9rem;
-      color: #aaa;
+      color: #e8e8e8;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -556,7 +556,7 @@
     .voice-metric-value {
       font-size: 0.95rem;
       font-weight: 600;
-      color: #e8e8e8;
+      color: #fff;
     }
     
     .voice-meter {
@@ -578,8 +578,8 @@
     .voice-meter-fill.low { background: linear-gradient(90deg, #EF4444, #F87171); }
     
     .voice-metric-desc {
-      font-size: 0.8rem;
-      color: #888;
+      font-size: 0.85rem;
+      color: #ccc;
       margin-top: 0.5rem;
     }
     
@@ -650,7 +650,7 @@
       color: #FCA5A5;
       padding: 0.35rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
     }
     
     .filler-word-tag .count {
@@ -715,14 +715,14 @@
     }
     
     .silence-time {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: #FCD34D;
       font-weight: 500;
     }
     
     .silence-duration {
-      font-size: 0.8rem;
-      color: #aaa;
+      font-size: 0.85rem;
+      color: #ccc;
     }
     
     /* WPM 가이드 박스 */
@@ -750,8 +750,8 @@
     }
     
     .wpm-guide-text {
-      font-size: 0.9rem;
-      color: #ddd;
+      font-size: 0.95rem;
+      color: #fff;
       line-height: 1.5;
     }
     
@@ -1745,10 +1745,10 @@ function renderVoiceAnalysis(voiceAnalysis) {
   };
   
   const getWpmStatus = (wpm) => {
-    if (wpm >= 100 && wpm <= 150) return { label: '이상적', class: 'excellent', icon: '✓' };
-    if (wpm >= 80 && wpm < 100) return { label: '조금 느림', class: 'good', icon: '○' };
-    if (wpm > 150 && wpm <= 180) return { label: '조금 빠름', class: 'warning', icon: '!' };
-    if (wpm < 80) return { label: '느림', class: 'warning', icon: '!' };
+    if (wpm >= 80 && wpm <= 120) return { label: '이상적', class: 'excellent', icon: '✓' };
+    if (wpm >= 60 && wpm < 80) return { label: '조금 느림', class: 'good', icon: '○' };
+    if (wpm > 120 && wpm <= 150) return { label: '조금 빠름', class: 'warning', icon: '!' };
+    if (wpm < 60) return { label: '느림', class: 'warning', icon: '!' };
     return { label: '매우 빠름', class: 'low', icon: '✗' };
   };
   
@@ -1855,9 +1855,9 @@ function renderVoiceAnalysis(voiceAnalysis) {
         <span class="voice-status-badge ${wpmStatus.class}">${wpmStatus.icon} ${wpmStatus.label}</span>
       </div>
       <div class="voice-meter">
-        <div class="voice-meter-fill ${wpmStatus.class}" style="width: ${Math.min(100, (voiceAnalysis.wpm / 180) * 100)}%"></div>
+        <div class="voice-meter-fill ${wpmStatus.class}" style="width: ${Math.min(100, (voiceAnalysis.wpm / 150) * 100)}%"></div>
       </div>
-      <div class="voice-metric-desc">분당 <strong>${voiceAnalysis.wpm}단어</strong> (총 ${voiceAnalysis.wordCount}단어, ${voiceAnalysis.recordingDuration}초)</div>
+      <div class="voice-metric-desc">분당 <strong>${voiceAnalysis.wpm}단어</strong> (총 ${voiceAnalysis.wordCount}단어, ${voiceAnalysis.recordingDuration}초) · 한국어 기준 80~120 WPM이 적당</div>
       ${wpmGuide ? `<div class="wpm-guide-box ${wpmGuideClass}"><div class="wpm-guide-text">💬 ${wpmGuide}</div></div>` : ''}
     </div>
     
@@ -1871,7 +1871,7 @@ function renderVoiceAnalysis(voiceAnalysis) {
         <div class="voice-meter-fill ${fillerStatus.class}" style="width: ${Math.min(100, fillerWords.ratio * 5)}%"></div>
       </div>
       <div class="voice-metric-desc">"음", "어", "그" 등 ${fillerWords.count}번 사용 (전체의 ${fillerWords.ratio}%)</div>
-      ${fillerTagsHtml ? `<div class="filler-word-list">${fillerTagsHtml}</div>` : '<div style="margin-top: 0.5rem; color: #6EE7B7; font-size: 0.85rem;">✓ 필러 워드 없이 깔끔하게 말했어요!</div>'}
+      ${fillerTagsHtml ? `<div class="filler-word-list">${fillerTagsHtml}</div>` : '<div style="margin-top: 0.5rem; color: #6EE7B7; font-size: 0.9rem;">✓ 필러 워드 없이 깔끔하게 말했어요!</div>'}
     </div>
     
     <!-- 3. 긴 침묵 분석 -->
@@ -1896,33 +1896,7 @@ function renderVoiceAnalysis(voiceAnalysis) {
       <div class="voice-metric-desc">음량 변화를 기반으로 측정한 발표의 활기입니다. (${energyLevel}%)</div>
     </div>
     
-    <!-- 5. 말 빠르기 트렌드 -->
-    <div class="voice-metric full-width">
-      <div class="voice-metric-header">
-        <span class="voice-metric-label">📊 에너지 흐름 (초반→중반→후반)</span>
-        <span class="voice-status-badge ${trendInfo.class}">${trendInfo.icon} ${trendInfo.label}</span>
-      </div>
-      <div class="trend-chart">
-        <div class="trend-bar-container">
-          <div class="trend-bar early" style="height: ${Math.max(20, segmentTrend.early * 0.7)}px;"></div>
-          <span class="trend-value">${segmentTrend.early}%</span>
-          <span class="trend-label">초반</span>
-        </div>
-        <div class="trend-bar-container">
-          <div class="trend-bar middle" style="height: ${Math.max(20, segmentTrend.middle * 0.7)}px;"></div>
-          <span class="trend-value">${segmentTrend.middle}%</span>
-          <span class="trend-label">중반</span>
-        </div>
-        <div class="trend-bar-container">
-          <div class="trend-bar late" style="height: ${Math.max(20, segmentTrend.late * 0.7)}px;"></div>
-          <span class="trend-value">${segmentTrend.late}%</span>
-          <span class="trend-label">후반</span>
-        </div>
-      </div>
-      <div class="voice-metric-desc">${trendInfo.desc}</div>
-    </div>
-    
-    <!-- 6. 기본 지표 (접힌 상태로) -->
+    <!-- 5. 평균 음량 -->
     <div class="voice-metric">
       <div class="voice-metric-header">
         <span class="voice-metric-label">🔊 평균 음량</span>
@@ -1934,6 +1908,7 @@ function renderVoiceAnalysis(voiceAnalysis) {
       <div class="voice-metric-desc">마이크에 잡힌 평균 음량입니다. (${voiceAnalysis.volumePercent}%)</div>
     </div>
     
+    <!-- 6. 말하기 비율 -->
     <div class="voice-metric">
       <div class="voice-metric-header">
         <span class="voice-metric-label">💬 말하기 비율</span>
@@ -2388,19 +2363,19 @@ function calculateVoiceAnalysis(transcript, recordingDuration) {
   const avgVolumeChange = volumeChanges.length > 0 ? volumeChanges.reduce((a, b) => a + b, 0) / volumeChanges.length : 0;
   const dynamicScore = Math.min(100, Math.round(avgVolumeChange * 5)); // 스케일링
   
-  // 9. WPM 가이드 메시지
+  // 9. WPM 가이드 메시지 (한국어 기준: 80-120 WPM이 적정)
   let wpmGuide = '';
   let wpmStatus = 'good';
-  if (wpm < 80) {
+  if (wpm < 60) {
     wpmGuide = '조금 느린 편이에요. 핵심 내용을 더 명확하게 전달해보세요.';
     wpmStatus = 'slow';
-  } else if (wpm < 100) {
+  } else if (wpm < 80) {
     wpmGuide = '차분한 속도예요. 중요한 포인트에서 강조하면 좋겠어요.';
     wpmStatus = 'moderate';
-  } else if (wpm <= 150) {
+  } else if (wpm <= 120) {
     wpmGuide = '이상적인 속도예요! 듣기 편한 템포입니다.';
     wpmStatus = 'ideal';
-  } else if (wpm <= 180) {
+  } else if (wpm <= 150) {
     wpmGuide = '조금 빠른 편이에요. 중요한 부분에서 잠시 쉬어가세요.';
     wpmStatus = 'fast';
   } else {
@@ -2917,7 +2892,7 @@ async function downloadPDF() {
     const getStatusColor = (value, type) => {
       if (type === 'volume') return value >= 60 && value <= 90 ? '#6EE7B7' : (value >= 40 ? '#FCD34D' : '#FCA5A5');
       if (type === 'speaking') return value >= 70 ? '#6EE7B7' : (value >= 50 ? '#93C5FD' : '#FCD34D');
-      if (type === 'wpm') return value >= 100 && value <= 150 ? '#6EE7B7' : (value >= 80 && value <= 180 ? '#FCD34D' : '#FCA5A5');
+      if (type === 'wpm') return value >= 80 && value <= 120 ? '#6EE7B7' : (value >= 60 && value <= 150 ? '#FCD34D' : '#FCA5A5');
       if (type === 'filler') return value <= 3 ? '#6EE7B7' : (value <= 7 ? '#93C5FD' : '#FCD34D');
       return value >= 70 ? '#6EE7B7' : (value >= 50 ? '#93C5FD' : '#FCD34D');
     };
@@ -2939,44 +2914,45 @@ async function downloadPDF() {
     <div style="margin-bottom: 20px;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
         <span style="background: rgba(139,92,246,0.2); padding: 6px 10px; border-radius: 8px;">📊</span>
-        <span style="font-weight: 600; color: #ccc;">음성 분석 결과</span>
+        <span style="font-weight: 600; color: #fff;">음성 분석 결과</span>
       </div>
       
       <!-- 말하기 속도 & 가이드 -->
       <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; margin-bottom: 10px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="color: #ccc; font-size: 13px; font-weight: 600;">⚡ 말하기 속도</span>
+          <span style="color: #fff; font-size: 13px; font-weight: 600;">⚡ 말하기 속도</span>
           <span style="color: ${getStatusColor(voiceAnalysis.wpm, 'wpm')}; font-size: 13px; font-weight: 600;">분당 ${voiceAnalysis.wpm}단어</span>
         </div>
         <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 10px;">
-          <div style="width: ${Math.min(100, (voiceAnalysis.wpm / 180) * 100)}%; height: 100%; background: ${getStatusColor(voiceAnalysis.wpm, 'wpm')}; border-radius: 3px;"></div>
+          <div style="width: ${Math.min(100, (voiceAnalysis.wpm / 150) * 100)}%; height: 100%; background: ${getStatusColor(voiceAnalysis.wpm, 'wpm')}; border-radius: 3px;"></div>
         </div>
-        ${wpmGuide ? `<div style="background: rgba(59,130,246,0.1); border-left: 3px solid #3B82F6; padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #ddd;">💬 ${wpmGuide}</div>` : ''}
+        <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">한국어 기준 80~120 WPM이 적당</div>
+        ${wpmGuide ? `<div style="background: rgba(59,130,246,0.1); border-left: 3px solid #3B82F6; padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #fff;">💬 ${wpmGuide}</div>` : ''}
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
         <!-- 필러 워드 -->
         <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span style="color: #aaa; font-size: 12px;">🗣️ 필러 워드</span>
+            <span style="color: #fff; font-size: 12px;">🗣️ 필러 워드</span>
             <span style="color: ${getStatusColor(fillerWords.ratio, 'filler')}; font-size: 12px; font-weight: 600;">${fillerWords.count}회 (${fillerWords.ratio}%)</span>
           </div>
-          <div style="font-size: 11px; color: #888; margin-top: 4px;">${fillerList}</div>
+          <div style="font-size: 11px; color: #ccc; margin-top: 4px;">${fillerList}</div>
         </div>
         
         <!-- 긴 침묵 -->
         <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span style="color: #aaa; font-size: 12px;">⏸️ 긴 침묵 (2초+)</span>
+            <span style="color: #fff; font-size: 12px;">⏸️ 긴 침묵 (2초+)</span>
             <span style="color: ${longSilences.count === 0 ? '#6EE7B7' : '#FCD34D'}; font-size: 12px; font-weight: 600;">${longSilences.count}회</span>
           </div>
-          <div style="font-size: 11px; color: #888;">2초 이상 멈춘 횟수</div>
+          <div style="font-size: 11px; color: #ccc;">2초 이상 멈춘 횟수</div>
         </div>
         
         <!-- 에너지 레벨 -->
         <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span style="color: #aaa; font-size: 12px;">🔥 에너지 레벨</span>
+            <span style="color: #fff; font-size: 12px;">🔥 에너지 레벨</span>
             <span style="color: ${energyLevel >= 60 ? '#6EE7B7' : (energyLevel >= 40 ? '#93C5FD' : '#FCD34D')}; font-size: 12px; font-weight: 600;">${energyLevel}%</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
@@ -2987,30 +2963,11 @@ async function downloadPDF() {
         <!-- 말하기 비율 -->
         <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span style="color: #aaa; font-size: 12px;">💬 말하기 비율</span>
+            <span style="color: #fff; font-size: 12px;">💬 말하기 비율</span>
             <span style="color: ${getStatusColor(voiceAnalysis.speakingRatio, 'speaking')}; font-size: 12px; font-weight: 600;">${voiceAnalysis.speakingRatio}%</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
             <div style="width: ${voiceAnalysis.speakingRatio}%; height: 100%; background: ${getStatusColor(voiceAnalysis.speakingRatio, 'speaking')}; border-radius: 3px;"></div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 에너지 흐름 -->
-      <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;">
-        <div style="color: #aaa; font-size: 12px; margin-bottom: 8px;">📊 에너지 흐름 (초반→중반→후반)</div>
-        <div style="display: flex; gap: 8px; align-items: flex-end; height: 40px;">
-          <div style="flex: 1; text-align: center;">
-            <div style="background: linear-gradient(180deg, #60A5FA, #3B82F6); height: ${Math.max(10, segmentTrend.early * 0.35)}px; border-radius: 4px 4px 0 0;"></div>
-            <div style="font-size: 10px; color: #888; margin-top: 4px;">초반 ${segmentTrend.early}%</div>
-          </div>
-          <div style="flex: 1; text-align: center;">
-            <div style="background: linear-gradient(180deg, #34D399, #10B981); height: ${Math.max(10, segmentTrend.middle * 0.35)}px; border-radius: 4px 4px 0 0;"></div>
-            <div style="font-size: 10px; color: #888; margin-top: 4px;">중반 ${segmentTrend.middle}%</div>
-          </div>
-          <div style="flex: 1; text-align: center;">
-            <div style="background: linear-gradient(180deg, #FBBF24, #F59E0B); height: ${Math.max(10, segmentTrend.late * 0.35)}px; border-radius: 4px 4px 0 0;"></div>
-            <div style="font-size: 10px; color: #888; margin-top: 4px;">후반 ${segmentTrend.late}%</div>
           </div>
         </div>
       </div>
