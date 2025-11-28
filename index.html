@@ -330,7 +330,7 @@
     
     .info-inline {
       font-size: 0.75rem;
-      color: #888;
+      color: #F59E0B;
       margin-left: auto;
     }
     
@@ -2072,68 +2072,107 @@ function refreshAdmin() {
 
 // ==================== PDF 다운로드 ====================
 async function downloadPDF() {
-  const resultDetailElement = document.getElementById('resultDetail');
-  
-  // PDF 생성을 위한 임시 HTML 엘리먼트 준비
-  const printArea = document.createElement('div');
-  printArea.style.padding = '20px';
-  printArea.style.backgroundColor = '#fff';
-  printArea.style.color = '#000';
-  printArea.style.fontFamily = 'Noto Sans KR, sans-serif';
-  printArea.style.width = '210mm'; // A4 width for better scaling
-  
   const title = document.getElementById('detailTitle').textContent;
   const date = document.getElementById('detailDate').textContent;
   const question = document.getElementById('detailQuestion').textContent;
   const transcript = document.getElementById('detailTranscript').textContent;
-  const feedbackHTML = document.getElementById('detailFeedback').innerHTML;
+  
+  // 현재 선택된 연습 데이터에서 원본 피드백 가져오기
+  const selectedCard = document.querySelector('.attempt-card.selected');
+  const index = selectedCard ? Array.from(document.querySelectorAll('.attempt-card')).indexOf(selectedCard) : 0;
+  const practice = practices[index];
+  const feedback = practice ? practice.feedback : '';
+  
+  // 피드백 파싱
+  const sections = parseFeedback(feedback);
 
-  // PDF 출력용 HTML 구조
+  // PDF용 HTML 생성 (어두운 테마)
+  const printArea = document.createElement('div');
+  printArea.style.cssText = 'padding: 30px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e8e8e8; font-family: "Noto Sans KR", sans-serif; width: 210mm;';
+  
   printArea.innerHTML = `
-    <h1 style="color: #10B981; border-bottom: 2px solid #10B981; padding-bottom: 10px; font-size: 24px;">🎯 면접 모의연습 결과 (${title})</h1>
-    <p style="color: #888; font-size: 14px; margin-bottom: 20px;">${date} | 면접번호: ${currentUser.interviewId}</p>
+    <h1 style="color: #10B981; border-bottom: 2px solid #10B981; padding-bottom: 15px; font-size: 24px; margin-bottom: 10px;">🎯 면접 모의연습 결과</h1>
+    <p style="color: #888; font-size: 14px; margin-bottom: 25px;">${title} | ${date} | 면접번호: ${currentUser.interviewId}</p>
     
-    <h2 style="color: #333; margin-top: 20px; font-size: 18px;">📋 질문</h2>
-    <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 10px 0; color: #000;">${question}</div>
-    
-    <h2 style="color: #333; margin-top: 20px; font-size: 18px;">🎤 나의 답변</h2>
-    <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 10px 0; color: #000;">${transcript}</div>
-    
-    <div style="background: #d0e7ff; border: 1px solid #93c5fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #3b82f6;">
-      ℹ️ 본 AI분석은 음성 변환과 AI 처리에 기반하므로, 부정확할 수 있습니다. 참고 목적으로만 사용하세요.
+    <!-- 질문 -->
+    <div style="margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span style="background: rgba(59,130,246,0.2); padding: 6px 10px; border-radius: 8px;">📋</span>
+        <span style="font-weight: 600; color: #ccc;">질문</span>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; color: #ddd; line-height: 1.8;">${question}</div>
     </div>
     
-    <h2 style="color: #333; margin-top: 20px; font-size: 18px;">💡 AI 피드백</h2>
-    <div style="background: #e8f5e9; border-left: 4px solid #10B981; padding: 15px; border-radius: 0 8px 8px 0; line-height: 1.6; color: #000;">${feedbackHTML}</div>
+    <!-- 나의 답변 -->
+    <div style="margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span style="background: rgba(16,185,129,0.2); padding: 6px 10px; border-radius: 8px;">🎤</span>
+        <span style="font-weight: 600; color: #ccc;">나의 답변 (음성→텍스트)</span>
+      </div>
+      <p style="font-size: 12px; color: #F59E0B; margin-bottom: 8px;">⚠️ 녹음 음성을 AI가 텍스트로 변환한 결과로, 주변 환경(소음, 에코 등)에 따라 부정확할 수 있습니다.</p>
+      <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; color: #ddd; line-height: 1.8;">${transcript}</div>
+    </div>
     
-    <p style="margin-top: 40px; color: #888; font-size: 12px; text-align: right;">
-      ※ 본 분석은 AI가 작성한 참고 자료입니다.
+    <!-- AI 피드백 -->
+    <div style="margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span style="background: rgba(245,158,11,0.2); padding: 6px 10px; border-radius: 8px;">💡</span>
+        <span style="font-weight: 600; color: #ccc;">AI 피드백</span>
+      </div>
+      <p style="font-size: 12px; color: #F59E0B; margin-bottom: 15px;">⚠️ 본 AI분석은 음성 변환과 AI 처리에 기반하므로, 부정확할 수 있습니다. 참고 목적으로만 사용하세요.</p>
+      
+      <!-- 피드백 카드 그리드 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <!-- 답변의 적절성 -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="background: rgba(59,130,246,0.2); padding: 10px 12px; color: #93C5FD; font-weight: 600; font-size: 14px;">📋 답변의 적절성</div>
+          <div style="padding: 12px; color: #ddd; font-size: 13px; line-height: 1.7;">${sections.relevance || '분석 내용이 없습니다.'}</div>
+        </div>
+        
+        <!-- 강점 -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="background: rgba(16,185,129,0.2); padding: 10px 12px; color: #6EE7B7; font-weight: 600; font-size: 14px;">✅ 강점 (잘한 부분)</div>
+          <div style="padding: 12px; color: #ddd; font-size: 13px; line-height: 1.7;">${sections.strength || '분석 내용이 없습니다.'}</div>
+        </div>
+        
+        <!-- 개선점 -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="background: rgba(245,158,11,0.2); padding: 10px 12px; color: #FCD34D; font-weight: 600; font-size: 14px;">🔧 개선점 (보완할 부분)</div>
+          <div style="padding: 12px; color: #ddd; font-size: 13px; line-height: 1.7;">${sections.improvement || '분석 내용이 없습니다.'}</div>
+        </div>
+        
+        <!-- 개선 제안 -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="background: rgba(139,92,246,0.2); padding: 10px 12px; color: #C4B5FD; font-weight: 600; font-size: 14px;">💎 구체적인 개선 제안</div>
+          <div style="padding: 12px; color: #ddd; font-size: 13px; line-height: 1.7;">${sections.suggestion || '분석 내용이 없습니다.'}</div>
+        </div>
+      </div>
+    </div>
+    
+    <p style="margin-top: 30px; color: #666; font-size: 11px; text-align: center;">
+      ※ 본 분석은 AI가 작성한 참고 자료입니다. 면접에서 가장 중요한 것은 진정성과 준비성입니다! 💪
     </p>
   `;
 
-  // 임시 엘리먼트를 body에 추가하여 html2canvas가 렌더링하도록 준비
   document.body.appendChild(printArea);
   
-  // PDF 생성 로직 (jsPDF + html2canvas)
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p', 'mm', 'a4');
   const pdfWidth = doc.internal.pageSize.getWidth();
   const pdfHeight = doc.internal.pageSize.getHeight();
 
   try {
-      // html2canvas를 사용하여 HTML 엘리먼트를 캔버스 이미지로 변환
-      const canvas = await html2canvas(printArea, { scale: 2 });
+      const canvas = await html2canvas(printArea, { scale: 2, backgroundColor: '#1a1a2e' });
       const imgData = canvas.toDataURL('image/png');
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
       
       let heightLeft = imgHeight;
       let position = 0;
       
-      // 페이지 분할 처리
       doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
       
-      while (heightLeft >= -50) { // 50mm 여유 공간 확보
+      while (heightLeft >= -50) {
           position = heightLeft - imgHeight;
           doc.addPage();
           doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
@@ -2143,9 +2182,8 @@ async function downloadPDF() {
       doc.save(`면접연습_${currentUser.interviewId}_${title}.pdf`);
   } catch (error) {
       console.error("PDF 생성 중 오류 발생:", error);
-      alert('PDF 생성에 실패했습니다. (외부 라이브러리 로드 또는 변환 오류).');
+      alert('PDF 생성에 실패했습니다.');
   } finally {
-      // 사용 후 임시 엘리먼트 제거
       document.body.removeChild(printArea);
   }
 }
