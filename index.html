@@ -2645,64 +2645,7 @@
       return labels[key] || key;
     }
 
-    // 영상 분석 결과를 상세 화면에 렌더링
-    // (Duplicate renderVideoAnalysis removed)
-    if (!grid) return; // grid가 없으면 안전하게 종료
 
-    grid.innerHTML = ''; // 기존 내용 초기화
-
-    if (!analysis) return;
-
-    // 1. 주요 지표 렌더링
-    let content = `
-    <div class="analysis-item">
-        <span class="icon">😊</span>
-        <div class="label">주요 표정</div>
-        <div class="value">${analysis.dominantExpression ? getExpressionLabel(analysis.dominantExpression) : '분석 없음'}</div>
-    </div>
-    <div class="analysis-item">
-        <span class="icon">👁️</span>
-        <div class="label">카메라 응시율</div>
-        <div class="value">${(analysis.cameraLookRatio * 100).toFixed(1)}%</div>
-    </div>
-    <div class="analysis-item">
-        <span class="icon">🧍</span>
-        <div class="label">자세 안정성</div>
-        <div class="value">${analysis.stabilityScore || '분석 없음'}</div>
-    </div>
-    <div class="analysis-item">
-        <span class="icon">😄</span>
-        <div class="label">미소 비율</div>
-        <div class="value">${(analysis.smileRatio * 100).toFixed(1)}%</div>
-    </div>
-  `;
-
-    // 2. 표정 분포 (히스토그램)
-    content += `<div class="analysis-item full-width">
-      <h4>표정 분포</h4>
-      <div class="expression-chart">`;
-
-    const expressions = analysis.expressionDistribution;
-    const total = Object.values(expressions).reduce((sum, count) => sum + count, 0);
-
-    // 표정 순서 정의
-    const expressionOrder = ['happy', 'neutral', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
-
-    expressionOrder.forEach(key => {
-      const percentage = total > 0 ? (expressions[key] || 0) / total * 100 : 0;
-      if (percentage > 0.1) { // 0.1% 미만은 표시하지 않음
-        content += `<div class="expression-bar-container">
-              <span class="expression-label">${getExpressionLabel(key)}</span>
-              <div class="expression-bar" style="width: ${percentage.toFixed(1)}%;"></div>
-              <span class="expression-percent">${percentage.toFixed(1)}%</span>
-          </div>`;
-      }
-    });
-
-    content += `</div></div>`;
-
-    grid.innerHTML = content;
-    }
 
     // ==================== 로그인 ====================
     async function doLogin() {
